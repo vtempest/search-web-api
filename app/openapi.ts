@@ -110,6 +110,182 @@ export const openAPISpec = {
         },
       },
     },
+    '/scrape': {
+      post: {
+        summary: 'Scrape a URL using Puppeteer',
+        description: 'Scrapes a web page using Puppeteer headless browser and returns the content. Useful for JavaScript-rendered pages and bypassing basic bot detection.',
+        operationId: 'scrape',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  url: {
+                    type: 'string',
+                    description: 'The URL to scrape',
+                    example: 'https://example.com',
+                  },
+                  waitFor: {
+                    type: 'string',
+                    description: 'CSS selector to wait for before capturing content',
+                    example: '.main-content',
+                  },
+                  timeout: {
+                    type: 'integer',
+                    description: 'Maximum time to wait in milliseconds',
+                    default: 30000,
+                    example: 30000,
+                  },
+                  screenshot: {
+                    type: 'boolean',
+                    description: 'Whether to capture a screenshot',
+                    default: false,
+                  },
+                  javascript: {
+                    type: 'boolean',
+                    description: 'Whether to enable JavaScript execution',
+                    default: true,
+                  },
+                },
+                required: ['url'],
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Successful scrape response',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    url: {
+                      type: 'string',
+                      description: 'The scraped URL',
+                    },
+                    html: {
+                      type: 'string',
+                      description: 'The HTML content of the page',
+                    },
+                    text: {
+                      type: 'string',
+                      description: 'The extracted text content',
+                    },
+                    title: {
+                      type: 'string',
+                      description: 'The page title',
+                    },
+                    screenshot: {
+                      type: 'string',
+                      description: 'Base64-encoded screenshot (if requested)',
+                    },
+                    loadTime: {
+                      type: 'integer',
+                      description: 'Time taken to load the page in milliseconds',
+                    },
+                  },
+                  required: ['url', 'html', 'text', 'title'],
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Bad request - missing or invalid parameters',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Server error - scraping failed',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/status': {
+      get: {
+        summary: 'Get engine status information',
+        description: 'Returns the health status, success/failure rates, and statistics for all search engines or a specific engine.',
+        operationId: 'getStatus',
+        parameters: [
+          {
+            name: 'engine',
+            in: 'query',
+            required: false,
+            description: 'Get status for a specific engine',
+            schema: {
+              type: 'string',
+              example: 'google',
+            },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Successful status response',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    engines: {
+                      type: 'array',
+                      description: 'Array of engine statuses',
+                      items: {
+                        $ref: '#/components/schemas/EngineStatus',
+                      },
+                    },
+                    summary: {
+                      type: 'object',
+                      properties: {
+                        total: {
+                          type: 'integer',
+                          description: 'Total number of engines',
+                        },
+                        active: {
+                          type: 'integer',
+                          description: 'Number of active engines',
+                        },
+                        failed: {
+                          type: 'integer',
+                          description: 'Number of failed engines',
+                        },
+                        disabled: {
+                          type: 'integer',
+                          description: 'Number of disabled engines',
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Engine not found',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
@@ -160,6 +336,65 @@ export const openAPISpec = {
           },
         },
         required: ['error'],
+      },
+      EngineStatus: {
+        type: 'object',
+        description: 'Status information for a search engine',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Engine name',
+            example: 'google',
+          },
+          status: {
+            type: 'string',
+            enum: ['active', 'failed', 'disabled'],
+            description: 'Current engine status',
+            example: 'active',
+          },
+          lastCheck: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Last time the engine was checked',
+          },
+          lastSuccess: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Last successful request',
+          },
+          lastFailure: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Last failed request',
+          },
+          failureCount: {
+            type: 'integer',
+            description: 'Number of failures',
+          },
+          successCount: {
+            type: 'integer',
+            description: 'Number of successes',
+          },
+          totalRequests: {
+            type: 'integer',
+            description: 'Total number of requests',
+          },
+          averageResponseTime: {
+            type: 'number',
+            description: 'Average response time in milliseconds',
+          },
+          lastError: {
+            type: 'string',
+            description: 'Last error message',
+          },
+          categories: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description: 'Engine categories',
+          },
+        },
       },
     },
   },
