@@ -23,14 +23,6 @@ app.get('/search', async (c) => {
     const engineNames = enginesParam ? enginesParam.split(',') : undefined;
     const categories = categoriesParam ? categoriesParam.split(',') : undefined;
 
-    // Filter engines by category if provided
-    // This requires engines to have a 'categories' property, which we need to add to the Engine interface
-    // For now, we'll just pass the categories to the search method if we update it, 
-    // or we can filter engines here if we update the Engine interface.
-
-    // Let's update the Search class to handle categories or do it here.
-    // Since Engine interface doesn't have categories yet, I should add it.
-
     const results = await search.search(query, pageno, engineNames, categories);
 
     if (format === 'json') {
@@ -41,6 +33,29 @@ app.get('/search', async (c) => {
     }
 
     return c.text('Only JSON format is supported in this version.');
+});
+
+app.get('/status', async (c) => {
+    const engineParam = c.req.query('engine');
+
+    if (engineParam) {
+        const status = search.getEngineStatus(engineParam);
+        if (!status) {
+            return c.json({ error: 'Engine not found' }, 404);
+        }
+        return c.json(status);
+    }
+
+    const allStatuses = search.getAllEngineStatuses();
+    return c.json({
+        engines: allStatuses,
+        summary: {
+            total: allStatuses.length,
+            active: allStatuses.filter(s => s.status === 'active').length,
+            failed: allStatuses.filter(s => s.status === 'failed').length,
+            disabled: allStatuses.filter(s => s.status === 'disabled').length,
+        }
+    });
 });
 
 export default app;
