@@ -1,0 +1,24 @@
+{
+    "name": "search-extract-web-api",
+    "type": "module",
+    "scripts": {
+        "dev": "bun --watch app/index.ts",
+        "start": "bun app/index.ts",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage"
+    },
+    "dependencies": {
+        "cheerio": "^1.0.0",
+        "hono": "^4.6.12",
+        "ioredis": "^5.8.2",
+        "undici": "^7.16.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.17",
+        "@vitest/coverage-v8": "^1.0.4",
+        "tsx": "^4.7.1",
+        "typescript": "^5.3.3",
+        "vitest": "^1.0.4"
+    }
+}
