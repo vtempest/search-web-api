@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 import * as cheerio from 'cheerio';
 
 const extractText = (element: any) => {
@@ -11,14 +12,14 @@ export const imdb: Engine = {
     request: async (query: string, params: any = {}) => {
         const url = `https://www.imdb.com/find/?q=${encodeURIComponent(query)}&s=all`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
+            responseType: 'text',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 'Accept-Language': 'en-US,en;q=0.9'
             }
         });
 
-        return await response.text();
     },
     response: async (html: string) => {
         const $ = cheerio.load(html);

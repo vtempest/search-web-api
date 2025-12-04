@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
+import grab from 'grab-url';
 
 export const mastodon: Engine = {
     name: 'mastodon',
@@ -16,14 +17,13 @@ export const mastodon: Engine = {
 
         const url = `${baseUrl}/api/v2/search?${queryParams.toString()}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'application/json',
             }
         });
 
-        return await response.json();
     },
     response: async (data: any) => {
         const results: EngineResult[] = [];

@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
+import grab from 'grab-url';
 
 export const semantic_scholar: Engine = {
     name: 'semantic_scholar',
@@ -20,7 +21,7 @@ export const semantic_scholar: Engine = {
             performTitleMatch: true,
         };
 
-        const response = await fetch(url, {
+        return await grab(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -30,7 +31,6 @@ export const semantic_scholar: Engine = {
             body: JSON.stringify(payload)
         });
 
-        return await response.json();
     },
     response: async (data: any) => {
         const results: EngineResult[] = [];

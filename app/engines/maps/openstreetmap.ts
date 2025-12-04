@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 
 export const openstreetmap: Engine = {
     name: 'openstreetmap',
@@ -6,13 +7,12 @@ export const openstreetmap: Engine = {
     request: async (query: string, params: any = {}) => {
         const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=10`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'HonoxSearX/1.0'
             }
         });
 
-        return await response.json();
     },
     response: async (json: any) => {
         const results: EngineResult[] = [];

@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 
 export const pypi: Engine = {
     name: 'pypi',
@@ -6,13 +7,12 @@ export const pypi: Engine = {
     request: async (query: string, params: any = {}) => {
         const url = `https://pypi.org/search/?q=${encodeURIComponent(query)}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             }
         });
 
-        return await response.text();
     },
     response: async (html: string) => {
         const results: EngineResult[] = [];

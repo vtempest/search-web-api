@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine.js';
+import grab from 'grab-url';
 
 export const wikipedia: Engine = {
     name: 'wikipedia',
@@ -16,7 +17,7 @@ export const wikipedia: Engine = {
         };
     },
     response: async (params) => {
-        const response = await fetch(params.url);
+        return await grab(params.url, { responseType: 'text' });
         const data = await response.json();
 
         return (data.query?.search || []).map((item: any) => ({

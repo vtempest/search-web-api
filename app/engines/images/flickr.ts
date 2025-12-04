@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
+import grab from 'grab-url';
 
 export const flickr: Engine = {
     name: 'flickr',
@@ -12,7 +13,7 @@ export const flickr: Engine = {
 
         const url = `https://www.flickr.com/search?${queryParams.toString()}&page=${pageno}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -20,7 +21,6 @@ export const flickr: Engine = {
             }
         });
 
-        return await response.text();
     },
     response: async (html: string) => {
         const results: EngineResult[] = [];

@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "cheerio": "^1.0.0",
+        "grab-url": "^1.0.8",
         "hono": "^4.6.12",
         "ioredis": "^5.8.2",
         "undici": "^7.16.0"

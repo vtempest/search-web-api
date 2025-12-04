@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 
 export const npm: Engine = {
     name: 'npm',
@@ -8,13 +9,12 @@ export const npm: Engine = {
         const from = (pageno - 1) * 10;
         const url = `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=10&from=${from}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'HonoxSearX/1.0'
             }
         });
 
-        return await response.json();
     },
     response: async (json: any) => {
         const results: EngineResult[] = [];

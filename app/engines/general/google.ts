@@ -2,6 +2,7 @@
 import { Engine, EngineResult } from '../lib/engine.js';
 import * as cheerio from 'cheerio';
 import { extractText } from '../lib/utils.js';
+import grab from 'grab-url';
 
 export const google: Engine = {
     name: 'google',
@@ -11,16 +12,15 @@ export const google: Engine = {
         const start = (pageno - 1) * 10;
         const url = `https://www.google.com/search?q=${encodeURIComponent(query)}&start=${start}&gbv=1`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.5',
                 'Cookie': 'CONSENT=YES+; SOCS=CAESBQgYEgAgAA=='
-            }
+            },
+            responseType: 'text'
         });
-
-        return await response.text();
     },
     response: async (html: string) => {
         const $ = cheerio.load(html);

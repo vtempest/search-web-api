@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine.js';
+import grab from 'grab-url';
 import * as cheerio from 'cheerio';
 import { extractText } from '../lib/utils.js';
 
@@ -18,14 +19,14 @@ export const arxiv: Engine = {
 
         const url = `https://export.arxiv.org/api/query?${queryParams.toString()}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
+            responseType: 'text',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'application/atom+xml,application/xml,text/xml',
             }
         });
 
-        return await response.text();
     },
     response: async (xml: string) => {
         const results: EngineResult[] = [];

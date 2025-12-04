@@ -1,5 +1,6 @@
 
 import { Engine, EngineResult } from '../lib/engine.js';
+import grab from 'grab-url';
 import * as cheerio from 'cheerio';
 import { extractText } from '../lib/utils.js';
 
@@ -19,7 +20,7 @@ export const reddit: Engine = {
         };
     },
     response: async (params) => {
-        const response = await fetch(params.url, { headers: params.headers });
+        return await grab(params.url, { headers: params.headers });
         const html = await response.text();
         const $ = cheerio.load(html);
         const results: EngineResult[] = [];

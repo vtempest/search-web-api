@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 
 // Multiple Invidious instances for fallback
 const INVIDIOUS_INSTANCES = [
@@ -14,7 +15,7 @@ async function tryInvidiousInstances(query: string, pageno: number): Promise<any
         try {
             const url = `${instance}/api/v1/search?q=${encodeURIComponent(query)}&page=${pageno}&type=video`;
 
-            const response = await fetch(url, {
+            return await grab(url, {
                 headers: {
                     'User-Agent': 'HonoxSearX/1.0'
                 },
@@ -22,7 +23,6 @@ async function tryInvidiousInstances(query: string, pageno: number): Promise<any
             });
 
             if (response.ok) {
-                return await response.json();
             }
         } catch (error) {
             // Try next instance
