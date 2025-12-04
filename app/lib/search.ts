@@ -32,12 +32,14 @@ import { imgur } from '../engines/images/imgur';
 import { pixabay } from '../engines/images/pixabay';
 import { wallhaven } from '../engines/images/wallhaven';
 import { deviantart } from '../engines/images/deviantart';
+import { openclipart } from '../engines/images/openclipart';
 
 // Videos engines
 import { youtube } from '../engines/videos/youtube';
 import { vimeo } from '../engines/videos/vimeo';
 import { dailymotion } from '../engines/videos/dailymotion';
 import { invidious } from '../engines/videos/invidious';
+import { peertube } from '../engines/videos/peertube';
 
 // News engines
 import { hackernews } from '../engines/news/hackernews';
@@ -85,6 +87,7 @@ import { archive } from '../engines/specialized/archive';
 import { openlibrary } from '../engines/specialized/openlibrary';
 import { wttr } from '../engines/specialized/wttr';
 import { annas_archive } from '../engines/specialized/annas_archive';
+import { goodreads } from '../engines/specialized/goodreads';
 
 export class Search {
     private engines: Engine[] = [
@@ -92,10 +95,10 @@ export class Search {
         google, bing, duckduckgo, yahoo, qwant, startpage, brave, yandex, baidu, mojeek,
         // IT/Developer (8)
         github, stackoverflow, npm, crates, dockerhub, pypi, packagist, rubygems,
-        // Images (8)
-        unsplash, bing_images, google_images, flickr, imgur, pixabay, wallhaven, deviantart,
-        // Videos (4)
-        youtube, vimeo, dailymotion, invidious,
+        // Images (9)
+        unsplash, bing_images, google_images, flickr, imgur, pixabay, wallhaven, deviantart, openclipart,
+        // Videos (5)
+        youtube, vimeo, dailymotion, invidious, peertube,
         // News (4)
         hackernews, yahoo_news, bing_news, google_news,
         // Academic (6)
@@ -108,8 +111,8 @@ export class Search {
         openstreetmap, photon, apple_maps,
         // Shopping (1)
         ebay,
-        // Specialized (7)
-        wikipedia, imdb, genius, archive, openlibrary, wttr, annas_archive
+        // Specialized (8)
+        wikipedia, imdb, genius, archive, openlibrary, wttr, annas_archive, goodreads
     ];
 
     constructor() {
