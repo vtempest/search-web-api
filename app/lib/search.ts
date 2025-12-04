@@ -10,6 +10,7 @@ import { qwant } from '../engines/general/qwant';
 import { startpage } from '../engines/general/startpage';
 import { brave } from '../engines/general/brave';
 import { yandex } from '../engines/general/yandex';
+import { baidu } from '../engines/general/baidu';
 
 // IT/Developer engines
 import { github } from '../engines/it/github';
@@ -25,6 +26,8 @@ import { rubygems } from '../engines/it/rubygems';
 import { unsplash } from '../engines/images/unsplash';
 import { bing_images } from '../engines/images/bing_images';
 import { google_images } from '../engines/images/google_images';
+import { flickr } from '../engines/images/flickr';
+import { imgur } from '../engines/images/imgur';
 
 // Videos engines
 import { youtube } from '../engines/videos/youtube';
@@ -54,9 +57,14 @@ import { twitter } from '../engines/social/twitter';
 import { reddit } from '../engines/social/reddit';
 import { medium } from '../engines/social/medium';
 import { soundcloud } from '../engines/social/soundcloud';
+import { mastodon } from '../engines/social/mastodon';
 
 // Maps engines
 import { openstreetmap } from '../engines/maps/openstreetmap';
+import { photon } from '../engines/maps/photon';
+
+// Shopping engines
+import { ebay } from '../engines/shopping/ebay';
 
 // Specialized engines
 import { wikipedia } from '../engines/specialized/wikipedia';
@@ -67,11 +75,11 @@ import { archive } from '../engines/specialized/archive';
 export class Search {
     private engines: Engine[] = [
         // General search
-        google, bing, duckduckgo, yahoo, qwant, startpage, brave, yandex,
+        google, bing, duckduckgo, yahoo, qwant, startpage, brave, yandex, baidu,
         // IT/Developer
         github, stackoverflow, npm, crates, dockerhub, pypi, packagist, rubygems,
         // Images
-        unsplash, bing_images, google_images,
+        unsplash, bing_images, google_images, flickr, imgur,
         // Videos
         youtube, vimeo, dailymotion,
         // News
@@ -81,9 +89,11 @@ export class Search {
         // Torrents
         torrent_1337x, thepiratebay, nyaa, yts, eztv,
         // Social
-        twitter, reddit, medium, soundcloud,
+        twitter, reddit, medium, soundcloud, mastodon,
         // Maps
-        openstreetmap,
+        openstreetmap, photon,
+        // Shopping
+        ebay,
         // Specialized
         wikipedia, imdb, genius, archive
     ];
