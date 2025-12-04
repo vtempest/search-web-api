@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 
 export const unsplash: Engine = {
     name: 'unsplash',
@@ -12,13 +13,12 @@ export const unsplash: Engine = {
         // Let's try a simple search URL and see if we can parse HTML.
         const url = `https://unsplash.com/napi/search/photos?query=${encodeURIComponent(query)}&per_page=20&page=${pageno}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             }
         });
 
-        return await response.json();
     },
     response: async (json: any) => {
         const results: EngineResult[] = [];

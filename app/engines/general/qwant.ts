@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 
 export const qwant: Engine = {
     name: 'qwant',
@@ -9,14 +10,13 @@ export const qwant: Engine = {
         // Qwant API (unofficial/web)
         const url = `https://api.qwant.com/v3/search/web?q=${encodeURIComponent(query)}&count=10&offset=${offset}&locale=en_US`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 'Accept': 'application/json',
             }
         });
 
-        return await response.json();
     },
     response: async (json: any) => {
         const results: EngineResult[] = [];

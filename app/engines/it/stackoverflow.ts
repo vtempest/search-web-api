@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 
 export const stackoverflow: Engine = {
     name: 'stackoverflow',
@@ -8,13 +9,12 @@ export const stackoverflow: Engine = {
         // StackExchange API
         const url = `https://api.stackexchange.com/2.3/search?order=desc&sort=relevance&q=${encodeURIComponent(query)}&site=stackoverflow&page=${pageno}&pagesize=10`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'HonoxSearX/1.0'
             }
         });
 
-        return await response.json();
     },
     response: async (json: any) => {
         const results: EngineResult[] = [];

@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine.js';
+import grab from 'grab-url';
 
 export const hackernews: Engine = {
     name: 'hackernews',
@@ -42,14 +43,13 @@ export const hackernews: Engine = {
 
         const url = `https://hn.algolia.com/api/v1/${searchType}?${searchParams.toString()}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'application/json',
             }
         });
 
-        return await response.json();
     },
     response: async (data: any) => {
         const results: EngineResult[] = [];

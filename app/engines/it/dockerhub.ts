@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 
 export const dockerhub: Engine = {
     name: 'dockerhub',
@@ -7,14 +8,13 @@ export const dockerhub: Engine = {
         const pageno = params.pageno || 1;
         const url = `https://hub.docker.com/api/search/v3/catalog/search?q=${encodeURIComponent(query)}&page=${pageno}&page_size=25`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 'Accept': 'application/json'
             }
         });
 
-        return await response.json();
     },
     response: async (json: any) => {
         const results: EngineResult[] = [];

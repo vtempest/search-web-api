@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 import * as cheerio from 'cheerio';
 
 export const genius: Engine = {
@@ -7,13 +8,12 @@ export const genius: Engine = {
     request: async (query: string, params: any = {}) => {
         const url = `https://genius.com/api/search/multi?per_page=5&q=${encodeURIComponent(query)}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             }
         });
 
-        return await response.json();
     },
     response: async (json: any) => {
         const results: EngineResult[] = [];

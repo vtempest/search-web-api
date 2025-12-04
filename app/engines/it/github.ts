@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 
 export const github: Engine = {
     name: 'github',
@@ -7,14 +8,13 @@ export const github: Engine = {
         const pageno = params.pageno || 1;
         const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&page=${pageno}&per_page=10`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'HonoxSearX/1.0',
                 'Accept': 'application/vnd.github.v3+json'
             }
         });
 
-        return await response.json();
     },
     response: async (json: any) => {
         const results: EngineResult[] = [];

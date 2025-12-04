@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
+import grab from 'grab-url';
 
 export const google_images: Engine = {
     name: 'google_images',
@@ -17,7 +18,7 @@ export const google_images: Engine = {
         // Pagination uses zero-based numbering
         const url = `https://www.google.com/search?${queryParams.toString()}&async=_fmt:json,p:1,ijn:${pageno - 1}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'NSTN/3.60.474802233.release Dalvik/2.1.0 (Linux; U; Android 12; US) gzip',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -26,7 +27,6 @@ export const google_images: Engine = {
             }
         });
 
-        return await response.text();
     },
     response: async (html: string) => {
         const results: EngineResult[] = [];

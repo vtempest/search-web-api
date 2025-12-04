@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 
 export const yts: Engine = {
     name: 'yts',
@@ -7,13 +8,12 @@ export const yts: Engine = {
         const pageno = params.pageno || 1;
         const url = `https://yts.mx/api/v2/list_movies.json?query_term=${encodeURIComponent(query)}&page=${pageno}&limit=20`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             }
         });
 
-        return await response.json();
     },
     response: async (json: any) => {
         const results: EngineResult[] = [];

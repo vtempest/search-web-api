@@ -1,5 +1,6 @@
 
 import { Engine, EngineResult } from '../lib/engine.js';
+import grab from 'grab-url';
 import * as cheerio from 'cheerio';
 import { extractText } from '../lib/utils.js';
 
@@ -15,7 +16,8 @@ export const duckduckgo: Engine = {
         formData.append('b', '');
         formData.append('kl', 'us-en'); // Default to US English
 
-        const response = await fetch(url, {
+        return await grab(url, {
+            responseType: 'text',
             method: 'POST',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -25,7 +27,6 @@ export const duckduckgo: Engine = {
             body: formData
         });
 
-        return await response.text();
     },
     response: async (html: string) => {
         const $ = cheerio.load(html);

@@ -1,4 +1,5 @@
 import { Engine, EngineResult } from '../lib/engine';
+import grab from 'grab-url';
 import * as cheerio from 'cheerio';
 
 const extractText = (element: any) => {
@@ -13,7 +14,8 @@ export const yahoo: Engine = {
         const start = (pageno - 1) * 7; // Yahoo usually displays 7 results per page
         const url = `https://search.yahoo.com/search?p=${encodeURIComponent(query)}&b=${start + 1}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
+            responseType: 'text',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
@@ -21,7 +23,6 @@ export const yahoo: Engine = {
             }
         });
 
-        return await response.text();
     },
     response: async (html: string) => {
         const $ = cheerio.load(html);
