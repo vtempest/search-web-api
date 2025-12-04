@@ -28,6 +28,8 @@ import { bing_images } from '../engines/images/bing_images';
 import { google_images } from '../engines/images/google_images';
 import { flickr } from '../engines/images/flickr';
 import { imgur } from '../engines/images/imgur';
+import { pixabay } from '../engines/images/pixabay';
+import { wallhaven } from '../engines/images/wallhaven';
 
 // Videos engines
 import { youtube } from '../engines/videos/youtube';
@@ -38,12 +40,15 @@ import { dailymotion } from '../engines/videos/dailymotion';
 import { hackernews } from '../engines/news/hackernews';
 import { yahoo_news } from '../engines/news/yahoo_news';
 import { bing_news } from '../engines/news/bing_news';
+import { google_news } from '../engines/news/google_news';
 
 // Academic engines
 import { google_scholar } from '../engines/academic/google_scholar';
 import { arxiv } from '../engines/academic/arxiv';
 import { wikidata } from '../engines/academic/wikidata';
 import { semantic_scholar } from '../engines/academic/semantic_scholar';
+import { crossref } from '../engines/academic/crossref';
+import { pubmed } from '../engines/academic/pubmed';
 
 // Torrent engines
 import { torrent_1337x } from '../engines/torrents/1337x';
@@ -51,6 +56,7 @@ import { thepiratebay } from '../engines/torrents/thepiratebay';
 import { nyaa } from '../engines/torrents/nyaa';
 import { yts } from '../engines/torrents/yts';
 import { eztv } from '../engines/torrents/eztv';
+import { solidtorrents } from '../engines/torrents/solidtorrents';
 
 // Social media engines
 import { twitter } from '../engines/social/twitter';
@@ -62,6 +68,7 @@ import { mastodon } from '../engines/social/mastodon';
 // Maps engines
 import { openstreetmap } from '../engines/maps/openstreetmap';
 import { photon } from '../engines/maps/photon';
+import { apple_maps } from '../engines/maps/apple_maps';
 
 // Shopping engines
 import { ebay } from '../engines/shopping/ebay';
@@ -71,31 +78,32 @@ import { wikipedia } from '../engines/specialized/wikipedia';
 import { imdb } from '../engines/specialized/imdb';
 import { genius } from '../engines/specialized/genius';
 import { archive } from '../engines/specialized/archive';
+import { openlibrary } from '../engines/specialized/openlibrary';
 
 export class Search {
     private engines: Engine[] = [
-        // General search
+        // General search (9)
         google, bing, duckduckgo, yahoo, qwant, startpage, brave, yandex, baidu,
-        // IT/Developer
+        // IT/Developer (8)
         github, stackoverflow, npm, crates, dockerhub, pypi, packagist, rubygems,
-        // Images
-        unsplash, bing_images, google_images, flickr, imgur,
-        // Videos
+        // Images (7)
+        unsplash, bing_images, google_images, flickr, imgur, pixabay, wallhaven,
+        // Videos (3)
         youtube, vimeo, dailymotion,
-        // News
-        hackernews, yahoo_news, bing_news,
-        // Academic
-        google_scholar, arxiv, wikidata, semantic_scholar,
-        // Torrents
-        torrent_1337x, thepiratebay, nyaa, yts, eztv,
-        // Social
+        // News (4)
+        hackernews, yahoo_news, bing_news, google_news,
+        // Academic (6)
+        google_scholar, arxiv, wikidata, semantic_scholar, crossref, pubmed,
+        // Torrents (6)
+        torrent_1337x, thepiratebay, nyaa, yts, eztv, solidtorrents,
+        // Social (5)
         twitter, reddit, medium, soundcloud, mastodon,
-        // Maps
-        openstreetmap, photon,
-        // Shopping
+        // Maps (3)
+        openstreetmap, photon, apple_maps,
+        // Shopping (1)
         ebay,
-        // Specialized
-        wikipedia, imdb, genius, archive
+        // Specialized (5)
+        wikipedia, imdb, genius, archive, openlibrary
     ];
 
     constructor() {
