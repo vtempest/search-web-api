@@ -1,9 +1,9 @@
 import { Engine, EngineResult } from '../lib/engine';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.text().trim().replace(/\s+/g, ' ');
+    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
 };
 
 export const imdb: Engine = {
@@ -22,16 +22,16 @@ export const imdb: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
-        $('.ipc-metadata-list-summary-item').each((i, el) => {
-            const element = $(el);
-            const link = element.find('a.ipc-metadata-list-summary-item__t');
-            const url = `https://www.imdb.com${link.attr('href')}`;
-            const title = extractText(link);
-            const content = extractText(element.find('.ipc-metadata-list-summary-item__li'));
-            const thumbnail = element.find('img').attr('src');
+        document.querySelectorAll('.ipc-metadata-list-summary-item').forEach((el) => {
+            const element = el;
+            const link = element.querySelectorAll('a.ipc-metadata-list-summary-item__t');
+            const url = `https://www.imdb.com${link.getAttribute('href')}`;
+            const title = (link)?.textContent?.trim() || \'\';
+            const content = (element.querySelectorAll('.ipc-metadata-list-summary-item__li')?.textContent?.trim() || \'\');
+            const thumbnail = element.querySelectorAll('img').getAttribute('src');
 
             if (url && title) {
                 results.push({

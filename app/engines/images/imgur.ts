@@ -1,8 +1,6 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
-import { extractText } from '../../lib/utils.js';
-
+import { parseHTML } from 'linkedom';
 export const imgur: Engine = {
     name: 'imgur',
     categories: ['images'],
@@ -29,17 +27,17 @@ export const imgur: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         // Parse Imgur search results
-        $('div.cards div.post, div[class*="post"]').each((i, el) => {
-            const element = $(el);
+        document.querySelectorAll('div.cards div.post, div[class*="post"]').forEach((el) => {
+            const element = el;
 
-            const link = element.find('a').first();
-            const url = link.attr('href');
-            const title = link.find('img').attr('alt') || '';
-            let thumbnail = link.find('img').attr('src') || '';
+            const link = element.querySelector('a');
+            const url = link.getAttribute('href');
+            const title = link.querySelectorAll('img').getAttribute('alt') || '';
+            let thumbnail = link.querySelectorAll('img').getAttribute('src') || '';
 
             if (!url || !thumbnail) {
                 return; // continue to next iteration

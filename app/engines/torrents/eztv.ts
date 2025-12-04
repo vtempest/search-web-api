@@ -1,9 +1,9 @@
 import { Engine, EngineResult } from '../lib/engine';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.text().trim().replace(/\s+/g, ' ');
+    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
 };
 
 export const eztv: Engine = {
@@ -22,21 +22,21 @@ export const eztv: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
-        $('table.forum_header_border tr.forum_header_border').each((i, el) => {
-            const element = $(el);
-            const titleColumn = element.find('td').eq(1);
-            const titleLink = titleColumn.find('a.epinfo');
-            const magnetLink = element.find('a.magnet');
-            const title = extractText(titleLink);
-            const url = magnetLink.attr('href') || '';
+        document.querySelectorAll('table.forum_header_border tr.forum_header_border').forEach((el) => {
+            const element = el;
+            const titleColumn = element.querySelectorAll('td')[1];
+            const titleLink = titleColumn.querySelectorAll('a.epinfo');
+            const magnetLink = element.querySelectorAll('a.magnet');
+            const title = (titleLink)?.textContent?.trim() || \'\';
+            const url = magnetLink.getAttribute('href') || '';
 
             // Get torrent metadata
-            const size = extractText(element.find('td').eq(3));
-            const date = extractText(element.find('td').eq(4));
-            const seeds = extractText(element.find('td').eq(5));
+            const size = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[3]);
+            const date = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[4]);
+            const seeds = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[5]);
 
             if (url && title) {
                 results.push({

@@ -1,9 +1,9 @@
 import { Engine, EngineResult } from '../lib/engine';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.text().trim().replace(/\s+/g, ' ');
+    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
 };
 
 export const google_scholar: Engine = {
@@ -26,16 +26,16 @@ export const google_scholar: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
-        $('.gs_r.gs_or.gs_scl').each((i, el) => {
-            const element = $(el);
-            const titleLink = element.find('.gs_rt a');
-            const url = titleLink.attr('href');
-            const title = extractText(titleLink);
-            const content = extractText(element.find('.gs_rs'));
-            const publicationInfo = extractText(element.find('.gs_a'));
+        document.querySelectorAll('.gs_r.gs_or.gs_scl').forEach((el) => {
+            const element = el;
+            const titleLink = element.querySelectorAll('.gs_rt a');
+            const url = titleLink.getAttribute('href');
+            const title = (titleLink)?.textContent?.trim() || \'\';
+            const content = (element.querySelectorAll('.gs_rs')?.textContent?.trim() || \'\');
+            const publicationInfo = (element.querySelectorAll('.gs_a')?.textContent?.trim() || \'\');
 
             if (url && title) {
                 results.push({

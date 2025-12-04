@@ -1,6 +1,6 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 export const google_news: Engine = {
     name: 'google_news',
@@ -27,13 +27,13 @@ export const google_news: Engine = {
             return results;
         }
 
-        const $ = cheerio.load(data);
+        const { document } = parseHTML(data);
 
-        $('div.xrnccd').each((_, element) => {
-            const $el = $(element);
+        document.querySelectorAll('div.xrnccd').forEach((element) => {
+            const elElem = element;
 
             // Extract the article link
-            const href = $el.find('article a').first().attr('href');
+            const href = $el.querySelector('article a').getAttribute('href');
             if (!href) return;
 
             // Decode the Google News internal link
@@ -46,10 +46,10 @@ export const google_news: Engine = {
                 if (httpIndex === -1) return;
                 const actualUrl = decodedStr.slice(httpIndex).split('\xd2')[0];
 
-                const title = $el.find('article h3').first().text().trim();
-                const pubDate = $el.find('article time').text().trim();
-                const pubOrigin = $el.find('article a[data-n-tid]').text().trim();
-                const thumbnail = $el.prev('a').find('figure img').attr('src') || '';
+                const title = $el.querySelector('article h3').textContent?.trim() || \'\';
+                const pubDate = $el.querySelectorAll('article time').textContent?.trim() || \'\';
+                const pubOrigin = $el.querySelectorAll('article a[data-n-tid]').textContent?.trim() || \'\';
+                const thumbnail = $el.prev('a').querySelectorAll('figure img').getAttribute('src') || '';
 
                 const content = [pubOrigin, pubDate].filter(Boolean).join(' / ');
 

@@ -1,9 +1,9 @@
 import { Engine, EngineResult } from '../lib/engine';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.text().trim().replace(/\s+/g, ' ');
+    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
 };
 
 export const medium: Engine = {
@@ -22,19 +22,19 @@ export const medium: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         // Medium uses dynamic content, so we'll parse what we can from the initial HTML
-        $('article').each((i, el) => {
-            const element = $(el);
-            const titleLink = element.find('h2 a, h3 a').first();
-            const title = extractText(titleLink);
-            const href = titleLink.attr('href');
+        document.querySelectorAll('article').forEach((el) => {
+            const element = el;
+            const titleLink = element.querySelector('h2 a, h3 a');
+            const title = (titleLink)?.textContent?.trim() || \'\';
+            const href = titleLink.getAttribute('href');
             const url = href ? (href.startsWith('http') ? href : `https://medium.com${href}`) : '';
-            const content = extractText(element.find('p').first());
-            const author = extractText(element.find('a[rel="author"]').first());
-            const readTime = extractText(element.find('[aria-label*="read"]').first());
+            const content = (element.querySelector('p')?.textContent?.trim() || \'\');
+            const author = (element.querySelector('a[rel="author"]')?.textContent?.trim() || \'\');
+            const readTime = (element.querySelector('[aria-label*="read"]')?.textContent?.trim() || \'\');
 
             if (url && title) {
                 results.push({

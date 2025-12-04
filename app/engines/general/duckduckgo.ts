@@ -1,9 +1,7 @@
 
-import { Engine, EngineResult } from '../lib/engine.js';
+import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
-import { extractText } from '../lib/utils.js';
-
+import { parseHTML } from 'linkedom';
 export const duckduckgo: Engine = {
     name: 'duckduckgo',
     categories: ['general'],
@@ -29,16 +27,16 @@ export const duckduckgo: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         // DDG HTML results
-        $('.result').each((i, el) => {
-            const element = $(el);
-            const link = element.find('.result__title a').first();
-            const url = link.attr('href');
-            const title = extractText(link);
-            const content = extractText(element.find('.result__snippet'));
+        document.querySelectorAll('.result').forEach((el) => {
+            const element = el;
+            const link = element.querySelector('.result__title a');
+            const url = link.getAttribute('href');
+            const title = (link)?.textContent?.trim() || \'\';
+            const content = (element.querySelectorAll('.result__snippet')?.textContent?.trim() || \'\');
 
             if (url && title) {
                 results.push({

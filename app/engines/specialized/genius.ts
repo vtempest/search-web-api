@@ -1,6 +1,6 @@
 import { Engine, EngineResult } from '../lib/engine';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 export const genius: Engine = {
     name: 'genius',

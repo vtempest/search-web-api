@@ -1,6 +1,6 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 export const solidtorrents: Engine = {
     name: 'solidtorrents',
@@ -23,23 +23,23 @@ export const solidtorrents: Engine = {
             return results;
         }
 
-        const $ = cheerio.load(data);
+        const { document } = parseHTML(data);
 
-        $('li.search-result').each((_, element) => {
-            const $el = $(element);
+        document.querySelectorAll('li.search-result').forEach((element) => {
+            const elElem = element;
 
-            const torrentfile = $el.find('a.dl-torrent').attr('href');
-            const magnet = $el.find('a.dl-magnet').attr('href');
+            const torrentfile = $el.querySelectorAll('a.dl-torrent').getAttribute('href');
+            const magnet = $el.querySelectorAll('a.dl-magnet').getAttribute('href');
 
             if (!torrentfile || !magnet) {
                 return; // skip results without torrent links
             }
 
-            const title = $el.find('h5.title').text().trim();
-            const url = $el.find('h5.title a').attr('href');
-            const category = $el.find('a.category').text().trim();
+            const title = $el.querySelectorAll('h5.title').textContent?.trim() || \'\';
+            const url = $el.querySelectorAll('h5.title a').getAttribute('href');
+            const category = $el.querySelectorAll('a.category').textContent?.trim() || \'\';
 
-            const stats = $el.find('.stats div').map((_, el) => $(el).text().trim()).get();
+            const stats = $el.querySelectorAll('.stats div').map((_, el) => el.textContent?.trim() || \'\').get();
 
             const content = [
                 category ? `Category: ${category}` : '',

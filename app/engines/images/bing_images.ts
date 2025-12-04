@@ -1,6 +1,6 @@
-import { Engine, EngineResult } from '../lib/engine.js';
+import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 export const bing_images: Engine = {
     name: 'bing_images',
@@ -29,15 +29,15 @@ export const bing_images: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         // Parse image results from Bing Images
-        $('ul.dgControl_list li, li[class*="dgControl"]').each((i, el) => {
-            const element = $(el);
+        document.querySelectorAll('ul.dgControl_list li, li[class*="dgControl"]').forEach((el) => {
+            const element = el;
 
             // Extract metadata from 'm' attribute
-            const metadataStr = element.find('a.iusc').attr('m');
+            const metadataStr = element.querySelectorAll('a.iusc').getAttribute('m');
             if (!metadataStr) {
                 return; // continue to next iteration
             }
@@ -46,9 +46,9 @@ export const bing_images: Engine = {
                 const metadata = JSON.parse(metadataStr);
 
                 // Extract additional info
-                const title = element.find('div.infnmpt a').text().trim() || metadata.t || '';
-                const imgFormat = element.find('div.imgpt div span').text().trim();
-                const source = element.find('div.imgpt div.lnkw a').text().trim();
+                const title = element.querySelectorAll('div.infnmpt a').textContent?.trim() || \'\' || metadata.t || '';
+                const imgFormat = element.querySelectorAll('div.imgpt div span').textContent?.trim() || \'\';
+                const source = element.querySelectorAll('div.imgpt div.lnkw a').textContent?.trim() || \'\';
 
                 // Parse resolution and format from imgFormat
                 const formatParts = imgFormat.split(' · ');

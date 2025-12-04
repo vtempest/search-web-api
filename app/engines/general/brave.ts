@@ -1,9 +1,9 @@
 import { Engine, EngineResult } from '../lib/engine';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.text().trim().replace(/\s+/g, ' ');
+    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
 };
 
 export const brave: Engine = {
@@ -27,15 +27,15 @@ export const brave: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
-        $('.snippet').each((i, el) => {
-            const element = $(el);
-            const link = element.find('a').first();
-            const url = link.attr('href');
-            const title = extractText(element.find('.title'));
-            const content = extractText(element.find('.snippet-description, .snippet-content'));
+        document.querySelectorAll('.snippet').forEach((el) => {
+            const element = el;
+            const link = element.querySelector('a');
+            const url = link.getAttribute('href');
+            const title = (element.querySelectorAll('.title')?.textContent?.trim() || \'\');
+            const content = (element.querySelectorAll('.snippet-description, .snippet-content')?.textContent?.trim() || \'\');
 
             if (url && title) {
                 results.push({

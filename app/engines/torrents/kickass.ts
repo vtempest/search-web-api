@@ -1,6 +1,6 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 export const kickass: Engine = {
     name: 'kickass',
@@ -23,23 +23,23 @@ export const kickass: Engine = {
             return results;
         }
 
-        const $ = cheerio.load(data);
+        const { document } = parseHTML(data);
 
-        $('table.data tr').each((i, element) => {
+        document.querySelectorAll('table.data tr').forEach((element) => {
             // Skip header row
             if (i === 0) return;
 
-            const $row = $(element);
-            const $link = $row.find('a.cellMainLink');
+            const rowElem = element;
+            const $link = $row.querySelectorAll('a.cellMainLink');
 
             if (!$link.length) return;
 
-            const href = $link.attr('href');
-            const title = $link.text().trim();
-            const description = $row.find('span.font11px.lightgrey.block').text().trim();
-            const seed = parseInt($row.find('td.green').text().trim()) || 0;
-            const leech = parseInt($row.find('td.red').text().trim()) || 0;
-            const filesize = $row.find('td.nobr').text().trim();
+            const href = $link.getAttribute('href');
+            const title = $link.textContent?.trim() || \'\';
+            const description = $row.querySelectorAll('span.font11px.lightgrey.block').textContent?.trim() || \'\';
+            const seed = parseInt($row.querySelectorAll('td.green').textContent?.trim() || \'\') || 0;
+            const leech = parseInt($row.querySelectorAll('td.red').textContent?.trim() || \'\') || 0;
+            const filesize = $row.querySelectorAll('td.nobr').textContent?.trim() || \'\';
 
             const content = [
                 description,

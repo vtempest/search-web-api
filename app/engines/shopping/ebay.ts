@@ -1,8 +1,6 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
-import { extractText } from '../../lib/utils.js';
-
+import { parseHTML } from 'linkedom';
 export const ebay: Engine = {
     name: 'ebay',
     categories: ['shopping'],
@@ -22,33 +20,33 @@ export const ebay: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         // Parse eBay search results
-        $('li.s-item, li[class*="s-item"]').each((i, el) => {
-            const element = $(el);
+        document.querySelectorAll('li.s-item, li[class*="s-item"]').forEach((el) => {
+            const element = el;
 
-            const link = element.find('a.s-item__link').first();
-            const url = link.attr('href');
-            const title = extractText(element.find('h3.s-item__title, div.s-item__title'));
-            const content = extractText(element.find('div[span="SECONDARY_INFO"]'));
+            const link = element.querySelector('a.s-item__link');
+            const url = link.getAttribute('href');
+            const title = (element.querySelectorAll('h3.s-item__title, div.s-item__title')?.textContent?.trim() || \'\');
+            const content = (element.querySelectorAll('div[span="SECONDARY_INFO"]')?.textContent?.trim() || \'\');
 
             if (!url || !title || title === '') {
                 return; // continue to next iteration
             }
 
             // Extract price
-            const price = extractText(element.find('div.s-item__detail span.s-item__price').first());
+            const price = (element.querySelector('div.s-item__detail span.s-item__price')?.textContent?.trim() || \'\');
 
             // Extract shipping info
-            const shipping = extractText(element.find('span.s-item__shipping, span[class*="shipping"]'));
+            const shipping = (element.querySelectorAll('span.s-item__shipping, span[class*="shipping"]')?.textContent?.trim() || \'\');
 
             // Extract location/source country
-            const location = extractText(element.find('span.s-item__location, span[class*="location"]'));
+            const location = (element.querySelectorAll('span.s-item__location, span[class*="location"]')?.textContent?.trim() || \'\');
 
             // Extract thumbnail
-            const thumbnail = element.find('img.s-item__image-img').attr('src') || '';
+            const thumbnail = element.querySelectorAll('img.s-item__image-img').getAttribute('src') || '';
 
             // Build content with metadata
             const metadata: string[] = [];

@@ -1,6 +1,6 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 export const annas_archive: Engine = {
     name: 'annas_archive',
@@ -24,20 +24,20 @@ export const annas_archive: Engine = {
             return results;
         }
 
-        const $ = cheerio.load(data);
+        const { document } = parseHTML(data);
 
-        $('main div.js-aarecord-list-outer > div').each((_, element) => {
-            const $el = $(element);
+        document.querySelectorAll('main div.js-aarecord-list-outer > div').forEach((element) => {
+            const elElem = element;
 
-            const href = $el.find('a').first().attr('href');
+            const href = $el.querySelector('a').getAttribute('href');
             if (!href) return;
 
             const url = `https://annas-archive.org${href}`;
-            const title = $el.find('a[href^="/md5"]').text().trim();
-            const author = $el.find('a[href^="/search"]').first().text().trim();
-            const publisher = $el.find('a[href^="/search"]').eq(1).text().trim();
-            const description = $el.find('div.relative').text().trim();
-            const thumbnail = $el.find('img').attr('src');
+            const title = $el.querySelectorAll('a[href^="/md5"]').textContent?.trim() || \'\';
+            const author = $el.querySelector('a[href^="/search"]').textContent?.trim() || \'\';
+            const publisher = $el.querySelectorAll('a[href^="/search"]')[1].textContent?.trim() || \'\';
+            const description = $el.querySelectorAll('div.relative').textContent?.trim() || \'\';
+            const thumbnail = $el.querySelectorAll('img').getAttribute('src');
 
             const content = [
                 description,

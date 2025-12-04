@@ -1,7 +1,6 @@
 
-import { Engine, EngineResult } from '../lib/engine.js';
-import * as cheerio from 'cheerio';
-import { extractText } from '../lib/utils.js';
+import { Engine, EngineResult } from '../../lib/engine.js';
+import { parseHTML } from 'linkedom';
 import grab from 'grab-url';
 
 export const google: Engine = {
@@ -23,15 +22,15 @@ export const google: Engine = {
         });
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         // Google Basic Version (gbv=1) results
-        // Selectors are different for gbv=1
-        $('.Gx5Zad.fP1Qef.xpd.EtOod.pkphOe').each((i, el) => {
-            const element = $(el);
-            const link = element.find('a').first();
-            const url = link.attr('href');
+        const elements = document.querySelectorAll('.Gx5Zad.fP1Qef.xpd.EtOod.pkphOe');
+
+        elements.forEach((element) => {
+            const link = element.querySelector('a');
+            const url = link?.getAttribute('href');
 
             // Extract real URL from /url?q=...
             let realUrl = url;
@@ -40,8 +39,11 @@ export const google: Engine = {
                 realUrl = decodeURIComponent(realUrl);
             }
 
-            const title = extractText(element.find('.BNeawe.vvjwJb.AP7Wnd'));
-            const content = extractText(element.find('.BNeawe.s3v9rd.AP7Wnd'));
+            const titleEl = element.querySelector('.BNeawe.vvjwJb.AP7Wnd');
+            const contentEl = element.querySelector('.BNeawe.s3v9rd.AP7Wnd');
+
+            const title = titleEl?.textContent?.trim() || '';
+            const content = contentEl?.textContent?.trim() || '';
 
             if (realUrl && title) {
                 results.push({

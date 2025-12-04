@@ -1,8 +1,6 @@
-import { Engine, EngineResult } from '../lib/engine.js';
+import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
-import { extractText } from '../lib/utils.js';
-
+import { parseHTML } from 'linkedom';
 export const yahoo_news: Engine = {
     name: 'yahoo_news',
     categories: ['news'],
@@ -27,15 +25,15 @@ export const yahoo_news: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         // Parse results from Yahoo News search
-        $('ol.searchCenterMiddle li, ol[class*="reg"] li').each((i, el) => {
-            const element = $(el);
+        document.querySelectorAll('ol.searchCenterMiddle li, ol[class*="reg"] li').forEach((el) => {
+            const element = el;
 
-            const link = element.find('h4 a, .fz-16 a, .title a').first();
-            let url = link.attr('href');
+            const link = element.querySelector('h4 a, .fz-16 a, .title a');
+            let url = link.getAttribute('href');
 
             if (!url) {
                 return; // continue to next iteration
@@ -57,9 +55,9 @@ export const yahoo_news: Engine = {
                 }
             }
 
-            const title = extractText(link);
-            const content = extractText(element.find('p, .compText, div[class*="desc"]').first());
-            const thumbnail = element.find('img').attr('data-src') || element.find('img').attr('src');
+            const title = (link)?.textContent?.trim() || \'\';
+            const content = (element.querySelector('p, .compText, div[class*="desc"]')?.textContent?.trim() || \'\');
+            const thumbnail = element.querySelectorAll('img').getAttribute('data-src') || element.querySelectorAll('img').getAttribute('src');
 
             if (url && title) {
                 results.push({

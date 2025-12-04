@@ -1,4 +1,4 @@
-import { Engine, EngineResult } from '../lib/engine.js';
+import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
 
 export const wikipedia: Engine = {

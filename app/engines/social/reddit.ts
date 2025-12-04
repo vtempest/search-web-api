@@ -1,9 +1,7 @@
 
-import { Engine, EngineResult } from '../lib/engine.js';
+import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
-import { extractText } from '../lib/utils.js';
-
+import { parseHTML } from 'linkedom';
 export const reddit: Engine = {
     name: 'reddit',
     categories: ['social media'],
@@ -21,15 +19,15 @@ export const reddit: Engine = {
     },
     response: async (params) => {
         return await grab(params.url, { headers: params.headers });
-        const html = await response.text();
-        const $ = cheerio.load(html);
+        const html = await response.textContent;
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
-        $('.search-result').each((i, el) => {
-            const titleLink = $(el).find('a.search-title');
-            const title = extractText(titleLink);
-            const link = titleLink.attr('href');
-            const content = extractText($(el).find('.search-result-body')); // Reddit doesn't always show snippets in old design easily, but let's try
+        document.querySelectorAll('.search-result').forEach((el) => {
+            const titleLink = el.querySelectorAll('a.search-title');
+            const title = (titleLink)?.textContent?.trim() || \'\';
+            const link = titleLink.getAttribute('href');
+            const content = (el.querySelectorAll('.search-result-body')?.textContent?.trim() || \'\'); // Reddit doesn't always show snippets in old design easily, but let's try
 
             if (title && link) {
                 results.push({
