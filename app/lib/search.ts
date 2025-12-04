@@ -1,47 +1,91 @@
 import { Engine, EngineResult } from './engine.js';
 import { engineStatusTracker } from './engine-status.js';
-import { google } from '../engines/google';
-import { bing } from '../engines/bing';
-import { duckduckgo } from '../engines/duckduckgo';
-import { wikipedia } from '../engines/wikipedia';
-import { reddit } from '../engines/reddit';
-import { yahoo } from '../engines/yahoo';
-import { qwant } from '../engines/qwant';
-import { startpage } from '../engines/startpage';
-import { github } from '../engines/github';
-import { youtube } from '../engines/youtube';
-import { stackoverflow } from '../engines/stackoverflow';
-import { npm } from '../engines/npm';
-import { brave } from '../engines/brave';
-import { genius } from '../engines/genius';
-import { openstreetmap } from '../engines/openstreetmap';
-import { unsplash } from '../engines/unsplash';
-import { imdb } from '../engines/imdb';
-import { google_scholar } from '../engines/google_scholar';
-import { torrent_1337x } from '../engines/1337x';
-import { thepiratebay } from '../engines/thepiratebay';
-import { nyaa } from '../engines/nyaa';
-import { yts } from '../engines/yts';
-import { eztv } from '../engines/eztv';
-import { twitter } from '../engines/twitter';
-import { medium } from '../engines/medium';
-import { archive } from '../engines/archive';
-import { wikidata } from '../engines/wikidata';
-import { soundcloud } from '../engines/soundcloud';
-import { hackernews } from '../engines/hackernews';
-import { yahoo_news } from '../engines/yahoo_news';
-import { bing_news } from '../engines/bing_news';
-import { arxiv } from '../engines/arxiv';
-import { bing_images } from '../engines/bing_images';
+
+// General search engines
+import { google } from '../engines/general/google';
+import { bing } from '../engines/general/bing';
+import { duckduckgo } from '../engines/general/duckduckgo';
+import { yahoo } from '../engines/general/yahoo';
+import { qwant } from '../engines/general/qwant';
+import { startpage } from '../engines/general/startpage';
+import { brave } from '../engines/general/brave';
+import { yandex } from '../engines/general/yandex';
+
+// IT/Developer engines
+import { github } from '../engines/it/github';
+import { stackoverflow } from '../engines/it/stackoverflow';
+import { npm } from '../engines/it/npm';
+import { crates } from '../engines/it/crates';
+import { dockerhub } from '../engines/it/dockerhub';
+import { pypi } from '../engines/it/pypi';
+import { packagist } from '../engines/it/packagist';
+import { rubygems } from '../engines/it/rubygems';
+
+// Images engines
+import { unsplash } from '../engines/images/unsplash';
+import { bing_images } from '../engines/images/bing_images';
+import { google_images } from '../engines/images/google_images';
+
+// Videos engines
+import { youtube } from '../engines/videos/youtube';
+import { vimeo } from '../engines/videos/vimeo';
+import { dailymotion } from '../engines/videos/dailymotion';
+
+// News engines
+import { hackernews } from '../engines/news/hackernews';
+import { yahoo_news } from '../engines/news/yahoo_news';
+import { bing_news } from '../engines/news/bing_news';
+
+// Academic engines
+import { google_scholar } from '../engines/academic/google_scholar';
+import { arxiv } from '../engines/academic/arxiv';
+import { wikidata } from '../engines/academic/wikidata';
+import { semantic_scholar } from '../engines/academic/semantic_scholar';
+
+// Torrent engines
+import { torrent_1337x } from '../engines/torrents/1337x';
+import { thepiratebay } from '../engines/torrents/thepiratebay';
+import { nyaa } from '../engines/torrents/nyaa';
+import { yts } from '../engines/torrents/yts';
+import { eztv } from '../engines/torrents/eztv';
+
+// Social media engines
+import { twitter } from '../engines/social/twitter';
+import { reddit } from '../engines/social/reddit';
+import { medium } from '../engines/social/medium';
+import { soundcloud } from '../engines/social/soundcloud';
+
+// Maps engines
+import { openstreetmap } from '../engines/maps/openstreetmap';
+
+// Specialized engines
+import { wikipedia } from '../engines/specialized/wikipedia';
+import { imdb } from '../engines/specialized/imdb';
+import { genius } from '../engines/specialized/genius';
+import { archive } from '../engines/specialized/archive';
 
 export class Search {
     private engines: Engine[] = [
-        google, bing, duckduckgo, wikipedia, reddit, yahoo, qwant, startpage,
-        github, youtube, stackoverflow, npm, brave, genius, openstreetmap,
-        unsplash, imdb, google_scholar,
+        // General search
+        google, bing, duckduckgo, yahoo, qwant, startpage, brave, yandex,
+        // IT/Developer
+        github, stackoverflow, npm, crates, dockerhub, pypi, packagist, rubygems,
+        // Images
+        unsplash, bing_images, google_images,
+        // Videos
+        youtube, vimeo, dailymotion,
+        // News
+        hackernews, yahoo_news, bing_news,
+        // Academic
+        google_scholar, arxiv, wikidata, semantic_scholar,
+        // Torrents
         torrent_1337x, thepiratebay, nyaa, yts, eztv,
-        twitter, medium, archive, wikidata, soundcloud,
-        hackernews, yahoo_news, bing_news, arxiv, bing_images
+        // Social
+        twitter, reddit, medium, soundcloud,
+        // Maps
+        openstreetmap,
+        // Specialized
+        wikipedia, imdb, genius, archive
     ];
 
     constructor() {
