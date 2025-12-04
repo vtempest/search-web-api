@@ -1,0 +1,101 @@
+import { Engine, EngineResult } from '../../lib/engine.js';
+import grab from 'grab-url';
+
+// Token management for Apple Maps API
+let tokenCache = {
+    value: '',
+    lastUpdated: 0
+};
+
+async function obtainToken(): Promise<string> {
+    const now = Date.now();
+
+    // Token expires every 30 minutes (1800 seconds)
+    if (tokenCache.value && (now - tokenCache.lastUpdated) < 1800000) {
+        return tokenCache.value;
+    }
+
+    try {
+        // Get DuckDuckGo's MapKit token
+        const tokenResponse = await grab('https://duckduckgo.com/local.js?get_mk_token=1', {
+            timeout: 3000,
+            responseType: 'text'
+        });
+
+        // Exchange for actual Apple Maps token
+        const actualTokenResponse = await grab(
+            'https://cdn.apple-mapkit.com/ma/bootstrap?apiVersion=2&mkjsVersion=5.72.53&poi=1',
+            {
+                timeout: 3000,
+                headers: {
+                    'Authorization': `Bearer ${tokenResponse}`
+                }
+            }
+        );
+
+        tokenCache.value = actualTokenResponse.authInfo.access_token;
+        tokenCache.lastUpdated = now;
+        return tokenCache.value;
+    } catch (err) {
+        return '';
+    }
+}
+
+export const apple_maps: Engine = {
+    name: 'apple_maps',
+    categories: ['maps'],
+    request: async (query: string, params: any = {}) => {
+        const token = await obtainToken();
+
+        if (!token) {
+            throw new Error('Failed to obtain Apple Maps API token');
+        }
+
+        const url = `https://api.apple-mapkit.com/v1/search?q=${encodeURIComponent(query)}&lang=en&mkjsVersion=5.72.53`;
+
+        return await grab(url, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+            }
+        });
+    },
+    response: async (json: any) => {
+        const results: EngineResult[] = [];
+
+        if (!json || !json.results) {
+            return results;
+        }
+
+        for (const result of json.results) {
+            const lat = result.center?.lat;
+            const lng = result.center?.lng;
+
+            const addressParts = [
+                result.subThoroughfare,
+                result.thoroughfare,
+                result.locality,
+                result.postCode,
+                result.country
+            ].filter(Boolean);
+
+            const content = [
+                addressParts.join(', '),
+                result.poiCategory ? `Type: ${result.poiCategory}` : '',
+                lat && lng ? `Coordinates: ${lat}, ${lng}` : '',
+                result.telephone ? `Phone: ${result.telephone}` : ''
+            ].filter(Boolean).join('\n');
+
+            results.push({
+                url: result.placecardUrl || result.urls?.[0] || '',
+                title: result.name,
+                content,
+                engine: 'apple_maps',
+                latitude: lat,
+                longitude: lng
+            });
+        }
+
+        return results;
+    }
+};
