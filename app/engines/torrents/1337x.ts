@@ -1,9 +1,9 @@
 import { Engine, EngineResult } from '../lib/engine';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.text().trim().replace(/\s+/g, ' ');
+    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
 };
 
 export const torrent_1337x: Engine = {
@@ -22,17 +22,17 @@ export const torrent_1337x: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
-        $('table.table-list tbody tr').each((i, el) => {
-            const element = $(el);
-            const link = element.find('td.name a').last(); // Second link is usually the torrent detail page
-            const url = `https://1337x.to${link.attr('href')}`;
-            const title = extractText(link);
-            const seeds = extractText(element.find('td.seeds'));
-            const leeches = extractText(element.find('td.leeches'));
-            const size = extractText(element.find('td.size'));
+        document.querySelectorAll('table.table-list tbody tr').forEach((el) => {
+            const element = el;
+            const link = element.querySelectorAll('td.name a').last(); // Second link is usually the torrent detail page
+            const url = `https://1337x.to${link.getAttribute('href')}`;
+            const title = (link)?.textContent?.trim() || \'\';
+            const seeds = (element.querySelectorAll('td.seeds')?.textContent?.trim() || \'\');
+            const leeches = (element.querySelectorAll('td.leeches')?.textContent?.trim() || \'\');
+            const size = (element.querySelectorAll('td.size')?.textContent?.trim() || \'\');
 
             // Remove the uploader name from size if present (it's often in a span inside td.size or just text)
             // For simplicity, just taking the text.

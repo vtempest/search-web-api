@@ -1,9 +1,9 @@
 import { Engine, EngineResult } from '../lib/engine';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.text().trim().replace(/\s+/g, ' ');
+    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
 };
 
 export const thepiratebay: Engine = {
@@ -22,17 +22,17 @@ export const thepiratebay: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
-        $('#searchResult tbody tr').each((i, el) => {
-            const element = $(el);
-            const titleLink = element.find('td.vertTh a.detLink');
-            const magnetLink = element.find('a[href^="magnet:"]');
-            const title = extractText(titleLink);
-            const url = magnetLink.attr('href') || '';
-            const descElement = element.find('font.detDesc');
-            const descText = extractText(descElement);
+        document.querySelectorAll('#searchResult tbody tr').forEach((el) => {
+            const element = el;
+            const titleLink = element.querySelectorAll('td.vertTh a.detLink');
+            const magnetLink = element.querySelectorAll('a[href^="magnet:"]');
+            const title = (titleLink)?.textContent?.trim() || \'\';
+            const url = magnetLink.getAttribute('href') || '';
+            const descElement = element.querySelectorAll('font.detDesc');
+            const descText = (descElement)?.textContent?.trim() || \'\';
 
             // Extract size, uploader, and date from description
             const sizeMatch = descText.match(/Size\s+([^,]+)/i);
@@ -41,8 +41,8 @@ export const thepiratebay: Engine = {
             const uploader = uploaderMatch ? uploaderMatch[1] : 'Unknown';
 
             // Get seeders and leechers
-            const seeders = extractText(element.find('td').eq(2));
-            const leechers = extractText(element.find('td').eq(3));
+            const seeders = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[2]);
+            const leechers = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[3]);
 
             if (url && title) {
                 results.push({

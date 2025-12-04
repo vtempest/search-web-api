@@ -1,6 +1,6 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 export const mojeek: Engine = {
     name: 'mojeek',
@@ -25,15 +25,15 @@ export const mojeek: Engine = {
             return results;
         }
 
-        const $ = cheerio.load(data);
+        const { document } = parseHTML(data);
 
-        $('ul.results-standard li a.ob').each((_, element) => {
-            const $el = $(element);
-            const url = $el.attr('href');
+        document.querySelectorAll('ul.results-standard li a.ob').forEach((element) => {
+            const elElem = element;
+            const url = $el.getAttribute('href');
             const $parent = $el.parent();
 
-            const title = $parent.find('h2 a').text().trim();
-            const content = $parent.find('p.s').text().trim();
+            const title = $parent.querySelectorAll('h2 a').textContent?.trim() || \'\';
+            const content = $parent.querySelectorAll('p.s').textContent?.trim() || \'\';
 
             if (url && title) {
                 results.push({

@@ -1,6 +1,6 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 export const deviantart: Engine = {
     name: 'deviantart',
@@ -22,22 +22,22 @@ export const deviantart: Engine = {
             return results;
         }
 
-        const $ = cheerio.load(data);
+        const { document } = parseHTML(data);
 
-        $('div.V_S0t_ > div > div > a').each((_, element) => {
-            const $el = $(element);
+        document.querySelectorAll('div.V_S0t_ > div > div > a').forEach((element) => {
+            const elElem = element;
 
             // Skip premium/blurred images
-            const premiumText = $el.parent().find('div div div').text();
+            const premiumText = $el.parent().querySelectorAll('div div div').textContent;
             if (premiumText && premiumText.includes('Watch the artist to view')) {
                 return;
             }
 
-            const url = $el.attr('href');
-            const title = $el.attr('aria-label');
-            const thumbnail = $el.find('div img').attr('src');
+            const url = $el.getAttribute('href');
+            const title = $el.getAttribute('aria-label');
+            const thumbnail = $el.querySelectorAll('div img').getAttribute('src');
 
-            let imgSrc = $el.find('div img').attr('srcset');
+            let imgSrc = $el.querySelectorAll('div img').getAttribute('srcset');
             if (imgSrc) {
                 // Get the highest quality image from srcset
                 imgSrc = imgSrc.split(' ')[0];

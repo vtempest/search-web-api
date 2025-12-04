@@ -1,9 +1,9 @@
 import { Engine, EngineResult } from '../lib/engine';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.text().trim().replace(/\s+/g, ' ');
+    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
 };
 
 export const soundcloud: Engine = {
@@ -22,19 +22,19 @@ export const soundcloud: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         // SoundCloud uses dynamic content, so we'll try to extract from initial HTML
-        $('article, .searchList__item').each((i, el) => {
-            const element = $(el);
-            const titleLink = element.find('a[itemprop="url"], h2 a').first();
-            const title = extractText(element.find('[itemprop="name"], h2'));
-            const artist = extractText(element.find('[itemprop="byArtist"], .soundTitle__username'));
-            const href = titleLink.attr('href');
+        document.querySelectorAll('article, .searchList__item').forEach((el) => {
+            const element = el;
+            const titleLink = element.querySelector('a[itemprop="url"], h2 a');
+            const title = (element.querySelectorAll('[itemprop="name"], h2')?.textContent?.trim() || \'\');
+            const artist = (element.querySelectorAll('[itemprop="byArtist"], .soundTitle__username')?.textContent?.trim() || \'\');
+            const href = titleLink.getAttribute('href');
             const url = href ? (href.startsWith('http') ? href : `https://soundcloud.com${href}`) : '';
-            const plays = extractText(element.find('.sc-ministats-plays, .soundStats__plays'));
-            const duration = extractText(element.find('.soundTitle__tagContent time, [itemprop="duration"]'));
+            const plays = (element.querySelectorAll('.sc-ministats-plays, .soundStats__plays')?.textContent?.trim() || \'\');
+            const duration = (element.querySelectorAll('.soundTitle__tagContent time, [itemprop="duration"]')?.textContent?.trim() || \'\');
 
             if (url && title) {
                 results.push({

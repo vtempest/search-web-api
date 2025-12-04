@@ -1,9 +1,9 @@
 import { Engine, EngineResult } from '../lib/engine';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.text().trim().replace(/\s+/g, ' ');
+    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
 };
 
 export const twitter: Engine = {
@@ -23,19 +23,19 @@ export const twitter: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
-        $('.timeline-item').each((i, el) => {
-            const element = $(el);
-            const tweetLink = element.find('.tweet-link');
-            const username = extractText(element.find('.username'));
-            const fullname = extractText(element.find('.fullname'));
-            const content = extractText(element.find('.tweet-content'));
-            const timestamp = extractText(element.find('.tweet-date a'));
-            const stats = extractText(element.find('.tweet-stats'));
+        document.querySelectorAll('.timeline-item').forEach((el) => {
+            const element = el;
+            const tweetLink = element.querySelectorAll('.tweet-link');
+            const username = (element.querySelectorAll('.username')?.textContent?.trim() || \'\');
+            const fullname = (element.querySelectorAll('.fullname')?.textContent?.trim() || \'\');
+            const content = (element.querySelectorAll('.tweet-content')?.textContent?.trim() || \'\');
+            const timestamp = (element.querySelectorAll('.tweet-date a')?.textContent?.trim() || \'\');
+            const stats = (element.querySelectorAll('.tweet-stats')?.textContent?.trim() || \'\');
 
-            const href = tweetLink.attr('href');
+            const href = tweetLink.getAttribute('href');
             const url = href ? `https://twitter.com${href.replace('/i/web', '')}` : '';
 
             if (url && content) {

@@ -1,8 +1,7 @@
 
-import { Engine, EngineResult } from '../lib/engine.js';
+import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
-import { extractText } from '../lib/utils.js';
+import { parseHTML } from 'linkedom';
 
 export const bing: Engine = {
     name: 'bing',
@@ -23,16 +22,18 @@ export const bing: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         // Bing results are typically in li.b_algo
-        $('li.b_algo').each((i, el) => {
-            const element = $(el);
-            const link = element.find('h2 a').first();
-            const url = link.attr('href');
-            const title = extractText(link);
-            const content = extractText(element.find('.b_caption p'));
+        const elements = document.querySelectorAll('li.b_algo');
+
+        elements.forEach((element) => {
+            const link = element.querySelector('h2 a');
+            const url = link?.getAttribute('href');
+            const title = link?.textContent?.trim() || '';
+            const contentEl = element.querySelector('.b_caption p');
+            const content = contentEl?.textContent?.trim() || '';
 
             if (url && title) {
                 results.push({

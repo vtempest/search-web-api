@@ -1,8 +1,6 @@
-import { Engine, EngineResult } from '../lib/engine.js';
+import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
-import { extractText } from '../lib/utils.js';
-
+import { parseHTML } from 'linkedom';
 export const bing_news: Engine = {
     name: 'bing_news',
     categories: ['news'],
@@ -33,17 +31,17 @@ export const bing_news: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         // Parse news items from Bing News
-        $('div.newsitem, div[class*="newsitem"]').each((i, el) => {
-            const element = $(el);
+        document.querySelectorAll('div.newsitem, div[class*="newsitem"]').forEach((el) => {
+            const element = el;
 
-            const link = element.find('a.title, a[class*="title"]').first();
-            const url = link.attr('href');
-            const title = extractText(link);
-            const content = extractText(element.find('div.snippet, div[class*="snippet"]'));
+            const link = element.querySelector('a.title, a[class*="title"]');
+            const url = link.getAttribute('href');
+            const title = (link)?.textContent?.trim() || \'\';
+            const content = (element.querySelectorAll('div.snippet, div[class*="snippet"]')?.textContent?.trim() || \'\');
 
             if (!url || !title) {
                 return; // continue to next iteration
@@ -51,11 +49,11 @@ export const bing_news: Engine = {
 
             // Extract metadata (source, time, author)
             const metadata: string[] = [];
-            const source = element.find('div.source, div[class*="source"]').first();
+            const source = element.querySelector('div.source, div[class*="source"]');
 
             if (source.length > 0) {
-                const ariaLabel = source.find('span[aria-label]').attr('aria-label');
-                const author = link.attr('data-author');
+                const ariaLabel = source.querySelectorAll('span[aria-label]').getAttribute('aria-label');
+                const author = link.getAttribute('data-author');
 
                 if (ariaLabel) {
                     metadata.push(ariaLabel);
@@ -66,7 +64,7 @@ export const bing_news: Engine = {
             }
 
             // Extract thumbnail
-            let thumbnail = element.find('a.imagelink img, a[class*="imagelink"] img').attr('src');
+            let thumbnail = element.querySelectorAll('a.imagelink img, a[class*="imagelink"] img').getAttribute('src');
             if (thumbnail && !thumbnail.startsWith('https://www.bing.com')) {
                 thumbnail = 'https://www.bing.com/' + thumbnail;
             }

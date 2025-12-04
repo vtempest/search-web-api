@@ -9,7 +9,7 @@
         "test:coverage": "vitest run --coverage"
     },
     "dependencies": {
-        "cheerio": "^1.0.0",
+        "linkedom": "^0.18.0",
         "grab-url": "^1.0.8",
         "hono": "^4.6.12",
         "ioredis": "^5.8.2",

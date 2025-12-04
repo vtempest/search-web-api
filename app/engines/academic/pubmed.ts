@@ -1,6 +1,6 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 export const pubmed: Engine = {
     name: 'pubmed',
@@ -23,8 +23,8 @@ export const pubmed: Engine = {
         // Parse XML to get PMIDs
         const $ = cheerio.load(esearchData, { xmlMode: true });
         const pmids: string[] = [];
-        $('Id').each((_, elem) => {
-            const pmid = $(elem).text();
+        document.querySelectorAll('Id').forEach((elem) => {
+            const pmid = elem.textContent;
             if (pmid) pmids.push(pmid);
         });
 
@@ -51,23 +51,23 @@ export const pubmed: Engine = {
 
         const $ = cheerio.load(data, { xmlMode: true });
 
-        $('PubmedArticle').each((_, article) => {
-            const $article = $(article);
+        document.querySelectorAll('PubmedArticle').forEach((article) => {
+            const articleElem = article;
 
-            const title = $article.find('ArticleTitle').first().text() || '';
-            const pmid = $article.find('PMID').first().text() || '';
+            const title = $article.querySelector('ArticleTitle').textContent || '';
+            const pmid = $article.querySelector('PMID').textContent || '';
             const url = `https://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
 
-            const abstract = $article.find('AbstractText').text() || '';
-            const journal = $article.find('Journal Title').first().text() || '';
-            const doi = $article.find('ELocationID[EIdType="doi"]').first().text() || '';
+            const abstract = $article.querySelectorAll('AbstractText').textContent || '';
+            const journal = $article.querySelector('Journal Title').textContent || '';
+            const doi = $article.querySelector('ELocationID[EIdType="doi"]').textContent || '';
 
             // Parse authors
             const authors: string[] = [];
-            $article.find('AuthorList Author').each((_, author) => {
-                const $author = $(author);
-                const firstName = $author.find('ForeName').text();
-                const lastName = $author.find('LastName').text();
+            $article.querySelectorAll('AuthorList Author').each((_, author) => {
+                const authorElem = author;
+                const firstName = $author.querySelectorAll('ForeName').textContent;
+                const lastName = $author.querySelectorAll('LastName').textContent;
                 const authorName = `${firstName} ${lastName}`.trim();
                 if (authorName) authors.push(authorName);
             });

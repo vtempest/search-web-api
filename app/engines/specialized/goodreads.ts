@@ -1,6 +1,6 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 export const goodreads: Engine = {
     name: 'goodreads',
@@ -23,20 +23,20 @@ export const goodreads: Engine = {
             return results;
         }
 
-        const $ = cheerio.load(data);
+        const { document } = parseHTML(data);
 
-        $('table tr').each((_, element) => {
-            const $row = $(element);
+        document.querySelectorAll('table tr').forEach((element) => {
+            const rowElem = element;
 
-            const $link = $row.find('a.bookTitle');
-            const href = $link.attr('href');
-            const title = $link.text().trim();
+            const $link = $row.querySelectorAll('a.bookTitle');
+            const href = $link.getAttribute('href');
+            const title = $link.textContent?.trim() || \'\';
 
             if (!href || !title) return;
 
-            const thumbnail = $row.find('img.bookCover').attr('src');
-            const author = $row.find('a.authorName').text().trim();
-            const info = $row.find('span.uitext').text().trim();
+            const thumbnail = $row.querySelectorAll('img.bookCover').getAttribute('src');
+            const author = $row.querySelectorAll('a.authorName').textContent?.trim() || \'\';
+            const info = $row.querySelectorAll('span.uitext').textContent?.trim() || \'\';
 
             results.push({
                 url: `https://www.goodreads.com${href}`,

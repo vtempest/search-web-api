@@ -1,8 +1,6 @@
-import { Engine, EngineResult } from '../lib/engine.js';
+import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
-import { extractText } from '../lib/utils.js';
-
+import { parseHTML } from 'linkedom';
 export const arxiv: Engine = {
     name: 'arxiv',
     categories: ['science', 'academic'],
@@ -35,17 +33,17 @@ export const arxiv: Engine = {
         const $ = cheerio.load(xml, { xmlMode: true });
 
         // Get all entry elements
-        $('entry').each((i, entry) => {
-            const $entry = $(entry);
+        document.querySelectorAll('entry').forEach((entry) => {
+            const entryElem = entry;
 
             // Extract title
-            const title = extractText($entry.find('title')).replace(/\s+/g, ' ').trim();
+            const title = ($entry.querySelectorAll('title')?.textContent?.trim() || \'\').replace(/\s+/g, ' ').trim();
 
             // Extract URL (id)
-            const url = extractText($entry.find('id'));
+            const url = ($entry.querySelectorAll('id')?.textContent?.trim() || \'\');
 
             // Extract abstract (summary)
-            let abstract = extractText($entry.find('summary')).replace(/\s+/g, ' ').trim();
+            let abstract = ($entry.querySelectorAll('summary')?.textContent?.trim() || \'\').replace(/\s+/g, ' ').trim();
 
             // Truncate abstract if too long
             if (abstract.length > 500) {
@@ -54,17 +52,17 @@ export const arxiv: Engine = {
 
             // Extract authors
             const authors: string[] = [];
-            $entry.find('author name').each((j, authorName) => {
-                authors.push($(authorName).text().trim());
+            $entry.querySelectorAll('author name').each((j, authorName) => {
+                authors.push(authorName.textContent?.trim() || \'\');
             });
 
             // Extract published date
-            const publishedDate = extractText($entry.find('published'));
+            const publishedDate = ($entry.querySelectorAll('published')?.textContent?.trim() || \'\');
 
             // Extract categories (tags)
             const categories: string[] = [];
-            $entry.find('category').each((j, cat) => {
-                const term = $(cat).attr('term');
+            $entry.querySelectorAll('category').each((j, cat) => {
+                const term = cat.getAttribute('term');
                 if (term) {
                     categories.push(term);
                 }

@@ -1,9 +1,9 @@
 import { Engine, EngineResult } from '../lib/engine';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.text().trim().replace(/\s+/g, ' ');
+    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
 };
 
 export const nyaa: Engine = {
@@ -22,23 +22,23 @@ export const nyaa: Engine = {
 
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
-        $('table.torrent-list tbody tr').each((i, el) => {
-            const element = $(el);
-            const category = extractText(element.find('td').eq(0));
-            const titleColumn = element.find('td').eq(1);
-            const titleLink = titleColumn.find('a').not('.comments').last();
-            const magnetLink = element.find('a[href^="magnet:"]');
-            const title = extractText(titleLink);
-            const url = magnetLink.attr('href') || '';
+        document.querySelectorAll('table.torrent-list tbody tr').forEach((el) => {
+            const element = el;
+            const category = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[0]);
+            const titleColumn = element.querySelectorAll('td')[1];
+            const titleLink = titleColumn.querySelectorAll('a').not('.comments').last();
+            const magnetLink = element.querySelectorAll('a[href^="magnet:"]');
+            const title = (titleLink)?.textContent?.trim() || \'\';
+            const url = magnetLink.getAttribute('href') || '';
 
             // Get torrent metadata
-            const size = extractText(element.find('td').eq(3));
-            const seeders = extractText(element.find('td').eq(5));
-            const leechers = extractText(element.find('td').eq(6));
-            const downloads = extractText(element.find('td').eq(7));
+            const size = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[3]);
+            const seeders = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[5]);
+            const leechers = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[6]);
+            const downloads = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[7]);
 
             if (url && title) {
                 results.push({

@@ -1,6 +1,6 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
+import { parseHTML } from 'linkedom';
 
 export const openclipart: Engine = {
     name: 'openclipart',
@@ -23,15 +23,15 @@ export const openclipart: Engine = {
             return results;
         }
 
-        const $ = cheerio.load(data);
+        const { document } = parseHTML(data);
 
-        $('div.gallery div.artwork').each((_, element) => {
-            const $el = $(element);
+        document.querySelectorAll('div.gallery div.artwork').forEach((element) => {
+            const elElem = element;
 
-            const $link = $el.find('a').first();
-            const href = $link.attr('href');
-            const title = $link.find('img').attr('alt');
-            const imgSrc = $link.find('img').attr('src');
+            const $link = $el.querySelector('a');
+            const href = $link.getAttribute('href');
+            const title = $link.querySelectorAll('img').getAttribute('alt');
+            const imgSrc = $link.querySelectorAll('img').getAttribute('src');
 
             if (!href || !title || !imgSrc) return;
 

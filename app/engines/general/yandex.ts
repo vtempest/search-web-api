@@ -1,8 +1,6 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
 import grab from 'grab-url';
-import * as cheerio from 'cheerio';
-import { extractText } from '../../lib/utils.js';
-
+import { parseHTML } from 'linkedom';
 export const yandex: Engine = {
     name: 'yandex',
     categories: ['general'],
@@ -35,17 +33,17 @@ export const yandex: Engine = {
         });
     },
     response: async (html: string) => {
-        const $ = cheerio.load(html);
+        const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         // Parse Yandex search results
-        $('li.serp-item, li[class*="serp-item"]').each((i, el) => {
-            const element = $(el);
+        document.querySelectorAll('li.serp-item, li[class*="serp-item"]').forEach((el) => {
+            const element = el;
 
-            const link = element.find('a.b-serp-item__title-link, a[class*="title-link"]').first();
-            const url = link.attr('href');
-            const title = extractText(link.find('span, h3'));
-            const content = extractText(element.find('div.b-serp-item__text, div[class*="text"]'));
+            const link = element.querySelector('a.b-serp-item__title-link, a[class*="title-link"]');
+            const url = link.getAttribute('href');
+            const title = (link.querySelectorAll('span, h3')?.textContent?.trim() || \'\');
+            const content = (element.querySelectorAll('div.b-serp-item__text, div[class*="text"]')?.textContent?.trim() || \'\');
 
             if (url && title) {
                 results.push({
