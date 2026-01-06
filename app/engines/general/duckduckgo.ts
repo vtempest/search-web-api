@@ -7,16 +7,11 @@ export const duckduckgo: Engine = {
     name: 'duckduckgo',
     categories: ['general'],
     request: async (query: string, params: any = {}) => {
-        const url = 'https://html.duckduckgo.com/html/';
-
-        const formData = new URLSearchParams();
-        formData.append('q', query);
-        formData.append('b', '');
-        formData.append('kl', 'us-en');
-
-        return await grab(url, {
-            method: 'POST',
-            body: formData.toString(),
+        return await grab( 'https://html.duckduckgo.com/html', {
+            post: true,
+            q: query,
+            b: '',
+            kl: 'us-en',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                 'Content-Type': 'application/x-www-form-urlencoded',

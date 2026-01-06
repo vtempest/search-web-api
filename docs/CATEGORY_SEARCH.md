@@ -5,6 +5,7 @@ This document explains how the TypeScript search API implements category-based s
 ## Overview
 
 The search API now supports:
+
 - **Multi-category search**: Search across specific categories (general, news, academic, etc.)
 - **Result combination**: Automatically combine and deduplicate results from multiple engines
 - **Weighted ranking**: Score results based on engine quality, category importance, and position
@@ -15,11 +16,13 @@ The search API now supports:
 ### Key Components
 
 1. **CategoryRegistry** (`app/lib/category-registry.ts`)
+
    - Manages engines organized by category
    - Supports 13 categories: general, images, videos, news, maps, music, it, academic, social, files, torrents, shopping, specialized
    - Each category has configurable default weights
 
 2. **ResultContainer** (`app/lib/result-container.ts`)
+
    - Deduplicates results by URL hash
    - Merges duplicate results from different engines
    - Calculates weighted scores
@@ -40,6 +43,7 @@ score = Σ (weight / position) for each position
 ```
 
 Where:
+
 - **weight** = `base_weight × engine_weight × category_weight × num_occurrences`
 - **position**: The position of the result in the engine's results (1st, 2nd, 3rd, etc.)
 - **num_occurrences**: How many engines found this result
@@ -47,6 +51,7 @@ Where:
 ### Engine Weights
 
 Higher quality engines get higher weights:
+
 - Google: 1.5
 - Bing: 1.3
 - DuckDuckGo: 1.2
@@ -57,6 +62,7 @@ Higher quality engines get higher weights:
 ### Category Weights
 
 Different categories can have different importance:
+
 - Academic: 1.3 (higher credibility)
 - IT: 1.2 (technical accuracy)
 - News: 1.1
@@ -67,6 +73,7 @@ Different categories can have different importance:
 ### Example Score Calculation
 
 If a result appears at:
+
 - Position 1 in Google (weight 1.5)
 - Position 3 in Bing (weight 1.3)
 - Category: general (weight 1.0)
@@ -84,22 +91,23 @@ The multiplier of 2 is because the result appeared in 2 engines.
 ### 1. Search a Single Category
 
 ```typescript
-import { Search } from './app/lib/search.js';
+import { Search } from "./app/lib/search.js";
 
 const search = new Search();
 
 // Search only general web engines
-const results = await search.searchByCategories('typescript', ['general']);
+const results = await search.searchByCategories("typescript", ["general"]);
 ```
 
 ### 2. Search Multiple Categories
 
 ```typescript
 // Search across general, IT, and academic categories
-const results = await search.searchByCategories(
-    'machine learning',
-    ['general', 'it', 'academic']
-);
+const results = await search.searchByCategories("machine learning", [
+  "general",
+  "it",
+  "academic",
+]);
 ```
 
 ### 3. Use the Standard Search with Category Filter
@@ -107,10 +115,10 @@ const results = await search.searchByCategories(
 ```typescript
 // More explicit control
 const results = await search.search(
-    'climate change',
-    1,                    // page number
-    undefined,            // engine names
-    ['news', 'general']   // categories
+  "climate change",
+  1, // page number
+  undefined, // engine names
+  ["news", "general"] // categories
 );
 ```
 
@@ -119,27 +127,27 @@ const results = await search.search(
 ```typescript
 // Search only specific engines
 const results = await search.search(
-    'nodejs',
-    1,
-    ['google', 'duckduckgo', 'github']  // specific engines
+  "nodejs",
+  1,
+  ["google", "duckduckgo", "github"] // specific engines
 );
 ```
 
 ## Available Categories
 
-| Category | Description | Default Weight | Example Engines |
-|----------|-------------|----------------|-----------------|
-| general | General web search | 1.0 | Google, Bing, DuckDuckGo |
-| images | Image search | 1.0 | Unsplash, Bing Images, Flickr |
-| videos | Video search | 1.0 | YouTube, Vimeo, Dailymotion |
-| news | News search | 1.1 | Google News, HackerNews, Bing News |
-| maps | Maps and locations | 1.0 | OpenStreetMap, Photon |
-| it | Programming/IT | 1.2 | GitHub, StackOverflow, NPM |
-| academic | Scientific papers | 1.3 | Google Scholar, arXiv, PubMed |
-| social | Social media | 0.9 | Reddit, Twitter, Mastodon |
-| torrents | Torrent search | 0.8 | 1337x, ThePirateBay, YTS |
-| shopping | Shopping | 1.0 | eBay |
-| specialized | Specialized engines | 1.1 | Wikipedia, IMDB, Genius |
+| Category    | Description         | Default Weight | Example Engines                    |
+| ----------- | ------------------- | -------------- | ---------------------------------- |
+| general     | General web search  | 1.0            | Google, Bing, DuckDuckGo           |
+| images      | Image search        | 1.0            | Unsplash, Bing Images, Flickr      |
+| videos      | Video search        | 1.0            | YouTube, Vimeo, Dailymotion        |
+| news        | News search         | 1.1            | Google News, HackerNews, Bing News |
+| maps        | Maps and locations  | 1.0            | OpenStreetMap, Photon              |
+| it          | Programming/IT      | 1.2            | GitHub, StackOverflow, NPM         |
+| academic    | Scientific papers   | 1.3            | Google Scholar, arXiv, PubMed      |
+| social      | Social media        | 0.9            | Reddit, Twitter, Mastodon          |
+| torrents    | Torrent search      | 0.8            | 1337x, ThePirateBay, YTS           |
+| shopping    | Shopping            | 1.0            | eBay                               |
+| specialized | Specialized engines | 1.1            | Wikipedia, IMDB, Genius            |
 
 ## Result Deduplication
 
@@ -155,6 +163,7 @@ Results with the same URL (normalized) are automatically merged:
    - Accumulates scores from all engines
 
 Example:
+
 ```
 Result from Google at position 1
 + Same URL from Bing at position 2
@@ -181,9 +190,11 @@ This ensures related results appear together while maintaining score-based relev
 ### Search Class Methods
 
 #### `search(query, pageno, engineNames?, categories?)`
+
 Main search method with full control.
 
 **Parameters:**
+
 - `query`: Search query string
 - `pageno`: Page number (default: 1)
 - `engineNames`: Optional array of specific engine names
@@ -192,9 +203,11 @@ Main search method with full control.
 **Returns:** `Promise<MergedResult[]>`
 
 #### `searchByCategories(query, categories, pageno?)`
+
 Convenience method for multi-category search.
 
 **Parameters:**
+
 - `query`: Search query string
 - `categories`: Array of category names
 - `pageno`: Page number (default: 1)
@@ -202,19 +215,23 @@ Convenience method for multi-category search.
 **Returns:** `Promise<MergedResult[]>`
 
 #### `getCategories()`
+
 Get list of available categories.
 
 **Returns:** `string[]`
 
 #### `getEnginesByCategory(category)`
+
 Get engines for a specific category.
 
 **Parameters:**
+
 - `category`: Category name
 
 **Returns:** `Engine[]`
 
 #### `getCategoryStats()`
+
 Get statistics about engines and categories.
 
 **Returns:** Object with category statistics
@@ -223,19 +240,19 @@ Get statistics about engines and categories.
 
 ```typescript
 interface MergedResult {
-    url?: string;
-    title: string;
-    content: string;
-    engines: string[];        // List of engines that found this result
-    positions: number[];      // Positions in each engine's results
-    score: number;           // Calculated weighted score
-    priority: 'low' | 'normal' | 'high';
-    category?: string;       // Primary category
-    template?: string;       // Result template type
-    thumbnail?: string;
-    publishedDate?: string;
-    author?: string;
-    // ... other fields
+  url?: string;
+  title: string;
+  content: string;
+  engines: string[]; // List of engines that found this result
+  positions: number[]; // Positions in each engine's results
+  score: number; // Calculated weighted score
+  priority: "low" | "normal" | "high";
+  category?: string; // Primary category
+  template?: string; // Result template type
+  thumbnail?: string;
+  publishedDate?: string;
+  author?: string;
+  // ... other fields
 }
 ```
 
@@ -246,31 +263,3 @@ interface MergedResult {
 3. **Timeout handling**: Individual engine timeouts don't block the overall search
 4. **Deduplication**: Hash-based deduplication is O(1) using Map
 5. **Sorting**: Results are sorted once using efficient native sort
-
-## Comparison with Python Implementation
-
-The TypeScript implementation closely follows the Python SearXNG design:
-
-| Feature | Python (SearXNG) | TypeScript (This API) |
-|---------|------------------|----------------------|
-| Result deduplication | ✓ Hash-based | ✓ Hash-based |
-| Position-based scoring | ✓ weight/position | ✓ weight/position |
-| Engine weights | ✓ Per-engine | ✓ Per-engine |
-| Category weights | ✗ No | ✓ Per-category |
-| Category grouping | ✓ Yes | ✓ Yes |
-| Result merging | ✓ Yes | ✓ Yes |
-| Parallel execution | ✓ Threading | ✓ Promise.all |
-
-## Examples
-
-See `examples/category-search-example.ts` for comprehensive usage examples including:
-- Single category search
-- Multi-category search
-- Result comparison across categories
-- Score analysis
-- Deduplication demonstration
-
-Run the example:
-```bash
-npm run example:category
-```
