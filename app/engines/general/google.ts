@@ -8,10 +8,11 @@ export const google: Engine = {
     categories: ['general'],
     request: async (query: string, params: any = {}) => {
         const pageno = params.pageno || 1;
-        const start = (pageno - 1) * 10;
-        const url = `https://www.google.com/search?q=${encodeURIComponent(query)}&start=${start}&gbv=1`;
 
-        return await grab(url, {
+        return await grab('https://www.google.com/search', {
+            q: encodeURIComponent(query),
+            start: (pageno - 1) * 10,
+            gbv: 1,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',

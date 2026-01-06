@@ -6,13 +6,12 @@ export const duckduckgo: Engine = {
     name: 'duckduckgo',
     categories: ['general'],
     request: async (query: string, params: any = {}) => {
-        // Using the HTML version of DDG which is easier to scrape
         const url = 'https://html.duckduckgo.com/html/';
 
         const formData = new URLSearchParams();
         formData.append('q', query);
         formData.append('b', '');
-        formData.append('kl', 'us-en'); // Default to US English
+        formData.append('kl', 'us-en');
 
         const response = await fetch(url, {
             method: 'POST',

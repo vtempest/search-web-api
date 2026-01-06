@@ -7,11 +7,9 @@ export const bing: Engine = {
     name: 'bing',
     categories: ['general'],
     request: async (query: string, params: any = {}) => {
-        const pageno = params.pageno || 1;
-        const first = (pageno - 1) * 10 + 1;
-        const url = `https://www.bing.com/search?q=${encodeURIComponent(query)}&first=${first}`;
-
-        return await grab(url, {
+        return await grab('https://www.bing.com/search', {
+            q: encodeURIComponent(query),
+            first: ((params.pageno || 1) - 1) * 10 + 1,
             responseType: 'text',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -19,17 +17,13 @@ export const bing: Engine = {
                 'Cookie': 'CONSENT=YES+'
             }
         });
-
     },
     response: async (response: any) => {
         const html = response.data || response;
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
-        // Bing results are typically in li.b_algo
-        const elements = document.querySelectorAll('li.b_algo');
-
-        elements.forEach((element) => {
+        document.querySelectorAll('li.b_algo').forEach((element) => {
             const link = element.querySelector('h2 a');
             const url = link?.getAttribute('href');
             const title = link?.textContent?.trim() || '';
