@@ -2,6 +2,7 @@
 import { Hono } from 'hono';
 import { apiReference } from '@scalar/hono-api-reference';
 import searchRoute from './routes/search.js';
+import autocompleteRoute from './routes/autocomplete.js';
 import { openAPISpec } from './openapi.js';
 
 const app = new Hono();
@@ -20,6 +21,7 @@ app.get('/openapi.json', (c) => {
 });
 
 app.route('/', searchRoute);
+app.route('/autocomplete', autocompleteRoute);
 
 app.get('/', (c) => {
     return c.text('SearXNG HonoX API is running! Visit /docs for API documentation.');
