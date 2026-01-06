@@ -16,6 +16,10 @@ export interface EngineWeight {
     [engineName: string]: number;
 }
 
+export interface CategoryWeight {
+    [category: string]: number;
+}
+
 /**
  * ResultContainer - Manages search results from multiple engines
  * Based on SearXNG's results.py implementation
@@ -24,6 +28,7 @@ export interface EngineWeight {
  * - Result deduplication by URL hash
  * - Position-based scoring algorithm
  * - Engine weight consideration
+ * - Category weight multipliers
  * - Result merging (combines duplicate results from different engines)
  * - Category-based grouping for better organization
  */
@@ -32,6 +37,7 @@ export class ResultContainer {
     private mainResultsSorted: MergedResult[] | null = null;
     private closed: boolean = false;
     private engineWeights: EngineWeight = {};
+    private categoryWeights: CategoryWeight = {};
 
     /**
      * Configure engine weights for scoring
@@ -42,10 +48,26 @@ export class ResultContainer {
     }
 
     /**
+     * Configure category weights for scoring
+     * Higher weight = more important results from this category
+     * Applied as a multiplier on top of engine weights
+     */
+    setCategoryWeights(weights: CategoryWeight) {
+        this.categoryWeights = weights;
+    }
+
+    /**
      * Get the weight for a specific engine (default: 1.0)
      */
     private getEngineWeight(engineName: string): number {
         return this.engineWeights[engineName] || 1.0;
+    }
+
+    /**
+     * Get the weight for a specific category (default: 1.0)
+     */
+    private getCategoryWeight(category: string): number {
+        return this.categoryWeights[category] || 1.0;
     }
 
     /**
@@ -166,11 +188,12 @@ export class ResultContainer {
 
     /**
      * Calculate score for a result
-     * Implements calculate_score from Python
+     * Implements calculate_score from Python with category weight enhancement
      *
      * Algorithm:
      * - weight starts at 1.0
      * - multiply by engine weight for each engine that found this result
+     * - multiply by category weight for the result's category
      * - multiply by number of positions (appearances)
      * - for each position:
      *   - if priority is 'low': skip
@@ -183,6 +206,11 @@ export class ResultContainer {
         // Apply engine weights
         for (const engineName of result.engines) {
             weight *= this.getEngineWeight(engineName);
+        }
+
+        // Apply category weight
+        if (result.category) {
+            weight *= this.getCategoryWeight(result.category);
         }
 
         // Multiply by number of occurrences
