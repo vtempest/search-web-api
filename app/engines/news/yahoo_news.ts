@@ -1,6 +1,7 @@
-import { Engine, EngineResult } from '../../lib/engine';
+import { Engine, EngineResult, extractResponseData } from '../../lib/engine';
 
 import { parseHTML } from 'linkedom';
+import grab from 'grab-url';
 export const yahoo_news: Engine = {
     name: 'yahoo_news',
     categories: ['news'],
@@ -14,18 +15,18 @@ export const yahoo_news: Engine = {
 
         const url = `https://news.search.yahoo.com/search?${searchParams.toString()}&b=${offset}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.5',
-            }
+            },
+            responseType: 'text'
         });
-        return await response.text();
 
     },
     response: async (response: any) => {
-        const html = typeof response === 'string' ? response : response.data || response;
+        const html = extractResponseData(response);
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
