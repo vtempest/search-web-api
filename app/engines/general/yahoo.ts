@@ -1,6 +1,6 @@
-import { Engine, EngineResult } from '../../lib/engine';
-
+import { Engine, EngineResult, extractResponseData } from '../../lib/engine';
 import { parseHTML } from 'linkedom';
+import grab from 'grab-url';
 
 const extractText = (element: any) => {
     return element.textContent?.trim() || ''.replace(/\s+/g, ' ');
@@ -14,18 +14,17 @@ export const yahoo: Engine = {
         const start = (pageno - 1) * 7; // Yahoo usually displays 7 results per page
         const url = `https://search.yahoo.com/search?p=${encodeURIComponent(query)}&b=${start + 1}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.9',
-            }
+            },
+            responseType: 'text'
         });
-        return await response.text();
-
     },
     response: async (response: any) => {
-        const html = typeof response === 'string' ? response : response.data || response;
+        const html = extractResponseData(response);
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 

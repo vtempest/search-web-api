@@ -1,4 +1,4 @@
-import { Engine, EngineResult } from '../../lib/engine.js';
+import { Engine, EngineResult, extractResponseData } from '../../lib/engine.js';
 
 
 // Token management for Apple Maps API
@@ -48,11 +48,12 @@ export const apple_maps: Engine = {
 
         const url = `https://api.apple-mapkit.com/v1/search?q=${encodeURIComponent(query)}&lang=en&mkjsVersion=5.72.53`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-            }
+            },
+        responseType: 'text'
         });
         return await response.json();
     },
