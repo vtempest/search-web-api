@@ -24,6 +24,7 @@ import { dockerhub } from '../engines/it/dockerhub';
 import { pypi } from '../engines/it/pypi';
 import { packagist } from '../engines/it/packagist';
 import { rubygems } from '../engines/it/rubygems';
+import { gitlab } from '../engines/it/gitlab';
 
 // Images engines
 import { unsplash } from '../engines/images/unsplash';
@@ -42,6 +43,7 @@ import { vimeo } from '../engines/videos/vimeo';
 import { dailymotion } from '../engines/videos/dailymotion';
 import { invidious } from '../engines/videos/invidious';
 import { peertube } from '../engines/videos/peertube';
+import { bing_videos } from '../engines/videos/bing_videos';
 
 // News engines
 import { hackernews } from '../engines/news/hackernews';
@@ -95,12 +97,12 @@ export class Search {
     private engines: Engine[] = [
         // General search (10)
         google, bing, duckduckgo, yahoo, qwant, startpage, brave, yandex, baidu, mojeek,
-        // IT/Developer (8)
-        github, stackoverflow, npm, crates, dockerhub, pypi, packagist, rubygems,
+        // IT/Developer (9)
+        github, gitlab, stackoverflow, npm, crates, dockerhub, pypi, packagist, rubygems,
         // Images (9)
         unsplash, bing_images, google_images, flickr, imgur, pixabay, wallhaven, deviantart, openclipart,
-        // Videos (5)
-        youtube, vimeo, dailymotion, invidious, peertube,
+        // Videos (6)
+        youtube, vimeo, dailymotion, bing_videos, invidious, peertube,
         // News (4)
         hackernews, yahoo_news, bing_news, google_news,
         // Academic (6)
