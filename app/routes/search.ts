@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { Search } from '../lib/search.js';
+import { Search } from '../../lib/search.js';
 
 const app = new Hono();
 

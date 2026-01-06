@@ -1,0 +1,68 @@
+import { Engine, EngineResult, extractResponseData } from '../../engine.js';
+
+
+export const peertube: Engine = {
+    name: 'peertube',
+    categories: ['videos', 'social'],
+    request: async (query: string, params: any = {}) => {
+        const pageno = params.pageno || 1;
+        const start = (pageno - 1) * 10;
+        const baseUrl = 'https://peer.tube';
+
+        const url = `${baseUrl}/api/v1/search/videos?search=${encodeURIComponent(query)}&searchTarget=search-index&resultType=videos&start=${start}&count=10&sort=-match&nsfw=false`;
+
+        return await grab(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+            },
+        responseType: 'text'
+        });
+        return await response.json();
+    },
+    response: async (json: any) => {
+        const results: EngineResult[] = [];
+
+        if (!json || !json.data) {
+            return results;
+        }
+
+        for (const result of json.data) {
+            const channel = result.channel || {};
+            const account = result.account || {};
+
+            // Format duration
+            const duration = result.duration || 0;
+            const hours = Math.floor(duration / 3600);
+            const minutes = Math.floor((duration % 3600) / 60);
+            const seconds = duration % 60;
+            const length = hours > 0
+                ? `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+                : `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            const metadata = [
+                channel.displayName,
+                `${channel.name}@${channel.host}`,
+                result.tags ? result.tags.join(', ') : ''
+            ].filter(Boolean).join(' | ');
+
+            const content = [
+                result.description || '',
+                `Views: ${result.views?.toLocaleString() || 0}`,
+                length ? `Duration: ${length}` : '',
+                metadata
+            ].filter(Boolean).join('\n');
+
+            results.push({
+                url: result.url,
+                title: result.name,
+                content,
+                engine: 'peertube',
+                thumbnail: result.thumbnailUrl || result.previewUrl,
+                iframe_src: result.embedUrl,
+                author: account.displayName
+            });
+        }
+
+        return results;
+    }
+};

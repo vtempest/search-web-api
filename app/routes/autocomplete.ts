@@ -5,7 +5,7 @@
  */
 
 import { Hono } from 'hono';
-import { searchAutocomplete, searchAutocompleteMulti, backends } from '../lib/autocomplete';
+import { searchAutocomplete, searchAutocompleteMulti, backends } from '../../lib/autocomplete';
 
 const autocompleteRoute = new Hono();
 
