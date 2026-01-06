@@ -16,6 +16,39 @@ export interface EngineWeight {
     [engineName: string]: number;
 }
 
+export interface CategoryWeight {
+    [category: string]: number;
+}
+
+export interface Infobox {
+    infobox: string;
+    id?: string;
+    content?: string;
+    img_src?: string;
+    urls?: Array<{ title: string; url: string; entity?: string }>;
+    attributes?: Array<{ label: string; value: string; entity?: string }>;
+    engine: string;
+    engines: Set<string>;
+}
+
+export interface UnresponsiveEngine {
+    engine: string;
+    errorType: string;
+    suspended: boolean;
+}
+
+export interface Timing {
+    engine: string;
+    total: number;
+    load: number;
+}
+
+export interface EngineData {
+    [engineName: string]: {
+        [key: string]: any;
+    };
+}
+
 /**
  * ResultContainer - Manages search results from multiple engines
  * Based on SearXNG's results.py implementation
@@ -24,14 +57,38 @@ export interface EngineWeight {
  * - Result deduplication by URL hash
  * - Position-based scoring algorithm
  * - Engine weight consideration
+ * - Category weight multipliers
  * - Result merging (combines duplicate results from different engines)
  * - Category-based grouping for better organization
+ * - Suggestions, answers, corrections, infoboxes
+ * - Unresponsive engine tracking
+ * - Performance timing metrics
  */
 export class ResultContainer {
     private mainResultsMap: Map<string, MergedResult> = new Map();
     private mainResultsSorted: MergedResult[] | null = null;
     private closed: boolean = false;
     private engineWeights: EngineWeight = {};
+    private categoryWeights: CategoryWeight = {};
+
+    // Additional result types from SearXNG
+    public infoboxes: Infobox[] = [];
+    public suggestions: Set<string> = new Set();
+    public answers: Map<string, any> = new Map();
+    public corrections: Set<string> = new Set();
+
+    // Engine tracking
+    public unresponsiveEngines: Set<UnresponsiveEngine> = new Set();
+    public timings: Timing[] = [];
+    public engineData: EngineData = {};
+
+    // Metadata
+    private numberofResults: number[] = [];
+    public paging: boolean = false;
+    public redirectUrl: string | null = null;
+
+    // Callback for filtering/modifying results
+    public onResult: ((result: any) => boolean) = () => true;
 
     /**
      * Configure engine weights for scoring
@@ -42,10 +99,26 @@ export class ResultContainer {
     }
 
     /**
+     * Configure category weights for scoring
+     * Higher weight = more important results from this category
+     * Applied as a multiplier on top of engine weights
+     */
+    setCategoryWeights(weights: CategoryWeight) {
+        this.categoryWeights = weights;
+    }
+
+    /**
      * Get the weight for a specific engine (default: 1.0)
      */
     private getEngineWeight(engineName: string): number {
         return this.engineWeights[engineName] || 1.0;
+    }
+
+    /**
+     * Get the weight for a specific category (default: 1.0)
+     */
+    private getCategoryWeight(category: string): number {
+        return this.categoryWeights[category] || 1.0;
     }
 
     /**
@@ -117,6 +190,7 @@ export class ResultContainer {
 
     /**
      * Add results from an engine
+     * Implements the extend() method from Python's ResultContainer
      *
      * @param engineName - Name of the engine providing results
      * @param results - Array of results from the engine
@@ -130,8 +204,126 @@ export class ResultContainer {
         let mainCount = 0;
 
         for (const result of results) {
+            // Apply the onResult callback for filtering
+            if (!this.onResult(result)) {
+                continue;
+            }
+
+            // Handle different result types
+            if ((result as any).suggestion) {
+                this.suggestions.add((result as any).suggestion);
+                continue;
+            }
+
+            if ((result as any).answer) {
+                const answer = (result as any).answer;
+                this.answers.set(answer, { engine: engineName, answer });
+                continue;
+            }
+
+            if ((result as any).correction) {
+                this.corrections.add((result as any).correction);
+                continue;
+            }
+
+            if ((result as any).infobox) {
+                this.mergeInfobox(result as any, engineName);
+                continue;
+            }
+
+            if ((result as any).number_of_results) {
+                this.numberofResults.push((result as any).number_of_results);
+                continue;
+            }
+
+            if ((result as any).engine_data) {
+                const key = (result as any).key || 'data';
+                if (!this.engineData[engineName]) {
+                    this.engineData[engineName] = {};
+                }
+                this.engineData[engineName][key] = (result as any).engine_data;
+                continue;
+            }
+
+            // Default: treat as main result
             mainCount++;
             this.mergeMainResult(result, mainCount, engineName);
+        }
+    }
+
+    /**
+     * Merge an infobox result
+     * Implements _merge_infobox from Python
+     */
+    private mergeInfobox(infoboxResult: any, engineName: string): void {
+        const newInfobox: Infobox = {
+            ...infoboxResult,
+            engine: engineName,
+            engines: new Set([engineName])
+        };
+
+        // Check for existing infobox with same ID
+        if (newInfobox.id) {
+            const existing = this.infoboxes.find(ib => ib.id === newInfobox.id);
+            if (existing) {
+                this.mergeTwoInfoboxes(existing, newInfobox);
+                return;
+            }
+        }
+
+        this.infoboxes.push(newInfobox);
+    }
+
+    /**
+     * Merge two infoboxes
+     * Implements merge_two_infoboxes from Python
+     */
+    private mergeTwoInfoboxes(origin: Infobox, other: Infobox): void {
+        // Merge engines
+        other.engines.forEach(e => origin.engines.add(e));
+
+        // Merge URLs
+        if (other.urls) {
+            if (!origin.urls) {
+                origin.urls = [];
+            }
+
+            for (const url2 of other.urls) {
+                const exists = origin.urls.some(url1 =>
+                    (url2.entity && url1.entity === url2.entity) || url1.url === url2.url
+                );
+                if (!exists) {
+                    origin.urls.push(url2);
+                }
+            }
+        }
+
+        // Use image from other if origin doesn't have one
+        if (other.img_src && !origin.img_src) {
+            origin.img_src = other.img_src;
+        }
+
+        // Merge attributes
+        if (other.attributes) {
+            if (!origin.attributes) {
+                origin.attributes = [];
+            }
+
+            const existingLabels = new Set(
+                origin.attributes.map(a => a.label || a.entity).filter(Boolean)
+            );
+
+            for (const attr of other.attributes) {
+                const key = attr.label || attr.entity;
+                if (key && !existingLabels.has(key)) {
+                    origin.attributes.push(attr);
+                }
+            }
+        }
+
+        // Use longer content
+        if (other.content && (!origin.content || other.content.length > origin.content.length)) {
+            origin.content = other.content;
         }
     }
 
@@ -166,11 +358,12 @@ export class ResultContainer {
 
     /**
      * Calculate score for a result
-     * Implements calculate_score from Python
+     * Implements calculate_score from Python with category weight enhancement
      *
      * Algorithm:
      * - weight starts at 1.0
      * - multiply by engine weight for each engine that found this result
+     * - multiply by category weight for the result's category
      * - multiply by number of positions (appearances)
      * - for each position:
      *   - if priority is 'low': skip
@@ -183,6 +376,11 @@ export class ResultContainer {
         // Apply engine weights
         for (const engineName of result.engines) {
             weight *= this.getEngineWeight(engineName);
+        }
+
+        // Apply category weight
+        if (result.category) {
+            weight *= this.getCategoryWeight(result.category);
         }
 
         // Multiply by number of occurrences
@@ -296,6 +494,76 @@ export class ResultContainer {
     }
 
     /**
+     * Add an unresponsive engine to tracking
+     * Implements add_unresponsive_engine from Python
+     */
+    addUnresponsiveEngine(engineName: string, errorType: string, suspended: boolean = false): void {
+        if (this.closed) {
+            console.error('Cannot add unresponsive engine after container is closed');
+            return;
+        }
+
+        this.unresponsiveEngines.add({
+            engine: engineName,
+            errorType,
+            suspended
+        });
+    }
+
+    /**
+     * Add timing information for an engine
+     * Implements add_timing from Python
+     */
+    addTiming(engineName: string, engineTime: number, pageLoadTime: number): void {
+        if (this.closed) {
+            console.error('Cannot add timing after container is closed');
+            return;
+        }
+
+        this.timings.push({
+            engine: engineName,
+            total: engineTime,
+            load: pageLoadTime
+        });
+    }
+
+    /**
+     * Get average number of results from engines that reported it
+     * Implements the number_of_results property from Python
+     *
+     * Returns 0 if the average is less than actual result count
+     */
+    getNumberOfResults(): number {
+        if (!this.closed) {
+            console.error('Call to getNumberOfResults before close()');
+            return 0;
+        }
+
+        if (this.numberofResults.length === 0) {
+            return 0;
+        }
+
+        const sum = this.numberofResults.reduce((a, b) => a + b, 0);
+        const average = Math.floor(sum / this.numberofResults.length);
+
+        // Return 0 if average is less than actual results
+        // (this indicates the average is not meaningful)
+        const actualResults = this.getOrderedResults().length;
+        return average < actualResults ? 0 : average;
+    }
+
+    /**
+     * Get all timings
+     */
+    getTimings(): Timing[] {
+        if (!this.closed) {
+            console.error('Call to getTimings before close()');
+            return [];
+        }
+        return this.timings;
+    }
+
+    /**
      * Get statistics about the results
      */
     getStats() {
@@ -307,6 +575,13 @@ export class ResultContainer {
             engineCoverage: results.reduce((sum, r) => sum + r.engines.length, 0) / results.length || 0,
             duplicatesMerged: results.filter(r => r.engines.length > 1).length,
             categories: [...new Set(results.map(r => r.category).filter(Boolean))],
+            suggestions: this.suggestions.size,
+            answers: this.answers.size,
+            corrections: this.corrections.size,
+            infoboxes: this.infoboxes.length,
+            unresponsiveEngines: this.unresponsiveEngines.size,
+            numberOfResults: this.getNumberOfResults(),
+            paging: this.paging
         };
     }
 }

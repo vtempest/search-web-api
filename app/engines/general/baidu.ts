@@ -1,6 +1,7 @@
-import { Engine, EngineResult } from '../../lib/engine.js';
-
+import { Engine, EngineResult, extractResponseData } from '../../lib/engine.js';
 import { parseHTML } from 'linkedom';
+import grab from 'grab-url';
+
 export const baidu: Engine = {
     name: 'baidu',
     categories: ['general'],
@@ -17,18 +18,18 @@ export const baidu: Engine = {
 
         const url = `https://www.baidu.com/s?${queryParams.toString()}`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
                 'Cookie': 'BAIDUID=1234567890:FG=1',
-            }
+            },
+            responseType: 'text'
         });
-        return await response.text();
     },
     response: async (response: any) => {
-        const html = typeof response === 'string' ? response : response.data || response;
+        const html = extractResponseData(response);
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 

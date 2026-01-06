@@ -1,6 +1,6 @@
-import { Engine, EngineResult } from '../../lib/engine';
-
+import { Engine, EngineResult, extractResponseData } from '../../lib/engine';
 import { parseHTML } from 'linkedom';
+import grab from 'grab-url';
 
 const extractText = (element: any) => {
     return element.textContent?.trim() || ''.replace(/\s+/g, ' ');
@@ -14,19 +14,18 @@ export const google_scholar: Engine = {
         const start = (pageno - 1) * 10;
         const url = `https://scholar.google.com/scholar?q=${encodeURIComponent(query)}&start=${start}&hl=en`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.9',
                 'Cookie': 'CONSENT=YES+'
-            }
+            },
+            responseType: 'text'
         });
-        return await response.text();
-
     },
     response: async (response: any) => {
-        const html = typeof response === 'string' ? response : response.data || response;
+        const html = extractResponseData(response);
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 

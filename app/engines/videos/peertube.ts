@@ -1,4 +1,4 @@
-import { Engine, EngineResult } from '../../lib/engine.js';
+import { Engine, EngineResult, extractResponseData } from '../../lib/engine.js';
 
 
 export const peertube: Engine = {
@@ -11,10 +11,11 @@ export const peertube: Engine = {
 
         const url = `${baseUrl}/api/v1/search/videos?search=${encodeURIComponent(query)}&searchTarget=search-index&resultType=videos&start=${start}&count=10&sort=-match&nsfw=false`;
 
-        const response = await fetch(url, {
+        return await grab(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-            }
+            },
+        responseType: 'text'
         });
         return await response.json();
     },

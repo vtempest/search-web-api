@@ -1,6 +1,7 @@
 
-import { Engine, EngineResult } from '../../lib/engine.js';
+import { Engine, EngineResult, extractResponseData } from '../../lib/engine.js';
 import { parseHTML } from 'linkedom';
+import grab from 'grab-url';
 
 export const duckduckgo: Engine = {
     name: 'duckduckgo',
@@ -14,20 +15,19 @@ export const duckduckgo: Engine = {
         formData.append('b', '');
         formData.append('kl', 'us-en'); // Default to US English
 
-        const response = await fetch(url, {
+        return await grab(url, {
             method: 'POST',
-            body: formData,
+            body: formData.toString(),
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'Accept-Language': 'en-US,en;q=0.9'
-            }
+            },
+            responseType: 'text'
         });
-
-        return await response.text();
     },
     response: async (response: any) => {
-        const html = typeof response === 'string' ? response : response.data || response;
+        const html = extractResponseData(response);
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 

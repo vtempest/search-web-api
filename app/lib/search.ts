@@ -1,6 +1,7 @@
 import { Engine } from './engine.js';
 import { engineStatusTracker } from './engine-status.js';
-import { ResultContainer, MergedResult } from './result-container.js';
+import { ResultContainer, MergedResult, CategoryWeight } from './result-container.js';
+import { categoryRegistry, CATEGORIES } from './category-registry.js';
 
 // General search engines
 import { google } from '../engines/general/google';
@@ -23,6 +24,7 @@ import { dockerhub } from '../engines/it/dockerhub';
 import { pypi } from '../engines/it/pypi';
 import { packagist } from '../engines/it/packagist';
 import { rubygems } from '../engines/it/rubygems';
+import { gitlab } from '../engines/it/gitlab';
 
 // Images engines
 import { unsplash } from '../engines/images/unsplash';
@@ -41,6 +43,7 @@ import { vimeo } from '../engines/videos/vimeo';
 import { dailymotion } from '../engines/videos/dailymotion';
 import { invidious } from '../engines/videos/invidious';
 import { peertube } from '../engines/videos/peertube';
+import { bing_videos } from '../engines/videos/bing_videos';
 
 // News engines
 import { hackernews } from '../engines/news/hackernews';
@@ -94,12 +97,12 @@ export class Search {
     private engines: Engine[] = [
         // General search (10)
         google, bing, duckduckgo, yahoo, qwant, startpage, brave, yandex, baidu, mojeek,
-        // IT/Developer (8)
-        github, stackoverflow, npm, crates, dockerhub, pypi, packagist, rubygems,
+        // IT/Developer (9)
+        github, gitlab, stackoverflow, npm, crates, dockerhub, pypi, packagist, rubygems,
         // Images (9)
         unsplash, bing_images, google_images, flickr, imgur, pixabay, wallhaven, deviantart, openclipart,
-        // Videos (5)
-        youtube, vimeo, dailymotion, invidious, peertube,
+        // Videos (6)
+        youtube, vimeo, dailymotion, bing_videos, invidious, peertube,
         // News (4)
         hackernews, yahoo_news, bing_news, google_news,
         // Academic (6)
@@ -117,9 +120,10 @@ export class Search {
     ];
 
     constructor() {
-        // Initialize all engines in the status tracker
+        // Initialize all engines in the status tracker and category registry
         this.engines.forEach(engine => {
             engineStatusTracker.initEngine(engine.name, engine.categories || []);
+            categoryRegistry.registerEngine(engine);
         });
     }
 
@@ -142,21 +146,35 @@ export class Search {
         };
         resultContainer.setEngineWeights(engineWeights);
 
-        const promises = this.engines
+        // Configure category weights from the CATEGORIES configuration
+        const categoryWeights: CategoryWeight = {};
+        for (const [key, config] of Object.entries(CATEGORIES)) {
+            categoryWeights[key] = config.defaultWeight;
+        }
+        resultContainer.setCategoryWeights(categoryWeights);
+
+        // Determine which engines to use based on filters
+        let enginesToUse: Engine[];
+
+        if (engineNames && engineNames.length > 0) {
+            // Use specific engines by name
+            enginesToUse = categoryRegistry.getEnginesByNames(engineNames);
+        } else if (categories && categories.length > 0) {
+            // Use engines from specific categories
+            enginesToUse = categoryRegistry.getEnginesByCategories(categories);
+        } else {
+            // Use all engines
+            enginesToUse = this.engines;
+        }
+
+        const promises = enginesToUse
             .filter(engine => {
                 // Filter by health status
                 if (!engineStatusTracker.isEngineHealthy(engine.name)) {
                     console.log(`Skipping unhealthy engine: ${engine.name}`);
                     return false;
                 }
-
-                if (engineNames && engineNames.length > 0) {
-                    return engineNames.includes(engine.name);
-                }
-                if (categories && categories.length > 0) {
-                    return engine.categories && engine.categories.some(cat => categories.includes(cat));
-                }
-                return true; // Default to all engines if no filter is provided
+                return true;
             })
             .map(async (engine) => {
                 const startTime = Date.now();
@@ -202,10 +220,44 @@ export class Search {
     }
 
     /**
+     * Search by specific categories and combine results
+     * This method demonstrates multi-category search with proper result combination
+     *
+     * @param query - Search query
+     * @param categories - Array of categories to search (e.g., ['general', 'news', 'academic'])
+     * @param pageno - Page number (default: 1)
+     * @returns Combined and weighted results from all categories
+     */
+    async searchByCategories(query: string, categories: string[], pageno: number = 1): Promise<MergedResult[]> {
+        return this.search(query, pageno, undefined, categories);
+    }
+
+    /**
      * Get all available engines
      */
     getEngines(): Engine[] {
         return this.engines;
+    }
+
+    /**
+     * Get engines by category
+     */
+    getEnginesByCategory(category: string): Engine[] {
+        return categoryRegistry.getCategoryEngines(category);
+    }
+
+    /**
+     * Get all available categories
+     */
+    getCategories(): string[] {
+        return categoryRegistry.getCategories();
+    }
+
+    /**
+     * Get category statistics
+     */
+    getCategoryStats() {
+        return categoryRegistry.getStats();
     }
 
     /**
