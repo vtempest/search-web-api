@@ -1,5 +1,5 @@
 
-import { Engine, EngineResult } from '../../lib/engine.js';
+import { Engine, EngineResult } from '../../lib/engine';
 import grab from 'grab-url';
 import { parseHTML } from 'linkedom';
 export const reddit: Engine = {
@@ -18,21 +18,23 @@ export const reddit: Engine = {
         };
     },
     response: async (params) => {
-        return await grab(params.url, { headers: params.headers });
-        const html = await response.textContent;
+        const response = await grab(params.url, {
+            headers: params.headers
+        });
+        const html = response.data || response;
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         document.querySelectorAll('.search-result').forEach((el) => {
-            const titleLink = el.querySelectorAll('a.search-title');
-            const title = (titleLink)?.textContent?.trim() || \'\';
-            const link = titleLink.getAttribute('href');
-            const content = (el.querySelectorAll('.search-result-body')?.textContent?.trim() || \'\'); // Reddit doesn't always show snippets in old design easily, but let's try
+            const titleLink = el.querySelector('a.search-title');
+            const title = titleLink?.textContent?.trim() || '';
+            const link = titleLink?.getAttribute('href');
+            const content = el.querySelector('.search-result-body')?.textContent?.trim() || ''; // Reddit doesn't always show snippets in old design easily, but let's try
 
             if (title && link) {
                 results.push({
                     title,
-                    link: link.startsWith('http') ? link : `https://old.reddit.com${link}`,
+                    url: link.startsWith('http') ? link : `https://old.reddit.com${link}`,
                     content: content || '',
                     engine: 'reddit'
                 });

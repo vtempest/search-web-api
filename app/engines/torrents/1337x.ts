@@ -1,9 +1,9 @@
-import { Engine, EngineResult } from '../lib/engine';
+import { Engine, EngineResult } from '../../lib/engine';
 import grab from 'grab-url';
 import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
+    return element.textContent?.trim() || ''.replace(/\s+/g, ' ');
 };
 
 export const torrent_1337x: Engine = {
@@ -21,18 +21,20 @@ export const torrent_1337x: Engine = {
         });
 
     },
-    response: async (html: string) => {
+    response: async (response: any) => {
+        const html = response.data || response;
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         document.querySelectorAll('table.table-list tbody tr').forEach((el) => {
             const element = el;
-            const link = element.querySelectorAll('td.name a').last(); // Second link is usually the torrent detail page
-            const url = `https://1337x.to${link.getAttribute('href')}`;
-            const title = (link)?.textContent?.trim() || \'\';
-            const seeds = (element.querySelectorAll('td.seeds')?.textContent?.trim() || \'\');
-            const leeches = (element.querySelectorAll('td.leeches')?.textContent?.trim() || \'\');
-            const size = (element.querySelectorAll('td.size')?.textContent?.trim() || \'\');
+            const links = element.querySelectorAll('td.name a');
+            const link = links[1] || links[0]; // Second link is usually the torrent detail page
+            const url = `https://1337x.to${link?.getAttribute('href')}`;
+            const title = link?.textContent?.trim() || '';
+            const seeds = element.querySelector('td.seeds')?.textContent?.trim() || '';
+            const leeches = element.querySelector('td.leeches')?.textContent?.trim() || '';
+            const size = element.querySelector('td.size')?.textContent?.trim() || '';
 
             // Remove the uploader name from size if present (it's often in a span inside td.size or just text)
             // For simplicity, just taking the text.

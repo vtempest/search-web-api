@@ -1,5 +1,5 @@
 
-import { Engine, EngineResult } from '../../lib/engine.js';
+import { Engine, EngineResult, extractResponseData } from '../../lib/engine.js';
 import { parseHTML } from 'linkedom';
 import grab from 'grab-url';
 
@@ -21,7 +21,8 @@ export const google: Engine = {
             responseType: 'text'
         });
     },
-    response: async (html: string) => {
+    response: async (response: any) => {
+        const html = extractResponseData(response);
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 

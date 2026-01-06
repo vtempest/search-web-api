@@ -1,9 +1,9 @@
-import { Engine, EngineResult } from '../lib/engine';
-import grab from 'grab-url';
+import { Engine, EngineResult } from '../../lib/engine';
+
 import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
+    return element.textContent?.trim() || ''.replace(/\s+/g, ' ');
 };
 
 export const eztv: Engine = {
@@ -13,30 +13,32 @@ export const eztv: Engine = {
         const pageno = params.pageno || 1;
         const url = `https://eztv.re/search/${encodeURIComponent(query)}`;
 
-        return await grab(url, {
-            responseType: 'text',
+        const response = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             }
         });
+        return await response.text();
 
     },
-    response: async (html: string) => {
+    response: async (response: any) => {
+        const html = typeof response === 'string' ? response : response.data || response;
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         document.querySelectorAll('table.forum_header_border tr.forum_header_border').forEach((el) => {
             const element = el;
             const titleColumn = element.querySelectorAll('td')[1];
-            const titleLink = titleColumn.querySelectorAll('a.epinfo');
-            const magnetLink = element.querySelectorAll('a.magnet');
-            const title = (titleLink)?.textContent?.trim() || \'\';
-            const url = magnetLink.getAttribute('href') || '';
+            const titleLink = titleColumn?.querySelector('a.epinfo');
+            const magnetLink = element.querySelector('a.magnet');
+            const title = titleLink?.textContent?.trim() || '';
+            const url = magnetLink?.getAttribute('href') || '';
 
             // Get torrent metadata
-            const size = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[3]);
-            const date = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[4]);
-            const seeds = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[5]);
+            const tds = element.querySelectorAll('td');
+            const size = tds[3]?.textContent?.trim() || '';
+            const date = tds[4]?.textContent?.trim() || '';
+            const seeds = tds[5]?.textContent?.trim() || '';
 
             if (url && title) {
                 results.push({

@@ -14,7 +14,8 @@ export const pypi: Engine = {
         });
 
     },
-    response: async (html: string) => {
+    response: async (response: any) => {
+        const html = response.data || response;
         const results: EngineResult[] = [];
 
         // PyPI search uses a simple structure

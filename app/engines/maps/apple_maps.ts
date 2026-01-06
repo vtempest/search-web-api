@@ -1,5 +1,5 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
-import grab from 'grab-url';
+
 
 // Token management for Apple Maps API
 let tokenCache = {
@@ -17,23 +17,18 @@ async function obtainToken(): Promise<string> {
 
     try {
         // Get DuckDuckGo's MapKit token
-        const tokenResponse = await grab('https://duckduckgo.com/local.js?get_mk_token=1', {
-            timeout: 3000,
-            responseType: 'text'
-        });
+        const tokenResponse = await fetch('https://duckduckgo.com/local.js?get_mk_token=1');
+        const tokenText = await tokenResponse.text();
 
         // Exchange for actual Apple Maps token
-        const actualTokenResponse = await grab(
-            'https://cdn.apple-mapkit.com/ma/bootstrap?apiVersion=2&mkjsVersion=5.72.53&poi=1',
-            {
-                timeout: 3000,
-                headers: {
-                    'Authorization': `Bearer ${tokenResponse}`
-                }
+        const actualTokenResponse = await fetch('https://cdn.apple-mapkit.com/ma/bootstrap?apiVersion=2&mkjsVersion=5.72.53&poi=1', {
+            headers: {
+                'Authorization': `Bearer ${tokenText}`
             }
-        );
+        });
+        const actualTokenData = await actualTokenResponse.json();
 
-        tokenCache.value = actualTokenResponse.authInfo.access_token;
+        tokenCache.value = actualTokenData.authInfo.access_token;
         tokenCache.lastUpdated = now;
         return tokenCache.value;
     } catch (err) {
@@ -53,12 +48,13 @@ export const apple_maps: Engine = {
 
         const url = `https://api.apple-mapkit.com/v1/search?q=${encodeURIComponent(query)}&lang=en&mkjsVersion=5.72.53`;
 
-        return await grab(url, {
+        const response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             }
         });
+        return await response.json();
     },
     response: async (json: any) => {
         const results: EngineResult[] = [];

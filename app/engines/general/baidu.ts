@@ -1,5 +1,5 @@
 import { Engine, EngineResult } from '../../lib/engine.js';
-import grab from 'grab-url';
+
 import { parseHTML } from 'linkedom';
 export const baidu: Engine = {
     name: 'baidu',
@@ -17,8 +17,7 @@ export const baidu: Engine = {
 
         const url = `https://www.baidu.com/s?${queryParams.toString()}`;
 
-        return await grab(url, {
-            responseType: 'text',
+        const response = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -26,8 +25,10 @@ export const baidu: Engine = {
                 'Cookie': 'BAIDUID=1234567890:FG=1',
             }
         });
+        return await response.text();
     },
-    response: async (html: string) => {
+    response: async (response: any) => {
+        const html = typeof response === 'string' ? response : response.data || response;
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
@@ -37,8 +38,8 @@ export const baidu: Engine = {
 
             // Get title and URL
             const titleLink = element.querySelector('h3 a, h3.c-title a');
-            let url = titleLink.getAttribute('href') || '';
-            const title = (titleLink)?.textContent?.trim() || \'\';
+            let url = titleLink?.getAttribute('href') || '';
+            const title = titleLink?.textContent?.trim() || '';
 
             if (!url || !title) {
                 return; // continue to next iteration
@@ -52,10 +53,10 @@ export const baidu: Engine = {
             }
 
             // Get content/description
-            const content = (element.querySelectorAll('div.c-abstract, div.c-span9, span.content-right_2s-H4')?.textContent?.trim() || \'\');
+            const content = element.querySelector('div.c-abstract, div.c-span9, span.content-right_2s-H4')?.textContent?.trim() || '';
 
             // Get timestamp if available
-            const timestamp = (element.querySelectorAll('span.c-color-gray2, span.newTimeFactor_2s-H4')?.textContent?.trim() || \'\');
+            const timestamp = element.querySelector('span.c-color-gray2, span.newTimeFactor_2s-H4')?.textContent?.trim() || '';
 
             const fullContent = timestamp ? `${timestamp}\n${content}` : content;
 

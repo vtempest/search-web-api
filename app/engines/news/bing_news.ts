@@ -30,7 +30,8 @@ export const bing_news: Engine = {
         });
 
     },
-    response: async (html: string) => {
+    response: async (response: any) => {
+        const html = response.data || response;
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
@@ -39,9 +40,11 @@ export const bing_news: Engine = {
             const element = el;
 
             const link = element.querySelector('a.title, a[class*="title"]');
+            if (!link) return;
+
             const url = link.getAttribute('href');
-            const title = (link)?.textContent?.trim() || \'\';
-            const content = (element.querySelectorAll('div.snippet, div[class*="snippet"]')?.textContent?.trim() || \'\');
+            const title = link.textContent?.trim() || '';
+            const content = element.querySelector('div.snippet, div[class*="snippet"]')?.textContent?.trim() || '';
 
             if (!url || !title) {
                 return; // continue to next iteration
@@ -51,8 +54,8 @@ export const bing_news: Engine = {
             const metadata: string[] = [];
             const source = element.querySelector('div.source, div[class*="source"]');
 
-            if (source.length > 0) {
-                const ariaLabel = source.querySelectorAll('span[aria-label]').getAttribute('aria-label');
+            if (source) {
+                const ariaLabel = source.querySelector('span[aria-label]')?.getAttribute('aria-label');
                 const author = link.getAttribute('data-author');
 
                 if (ariaLabel) {
@@ -64,7 +67,7 @@ export const bing_news: Engine = {
             }
 
             // Extract thumbnail
-            let thumbnail = element.querySelectorAll('a.imagelink img, a[class*="imagelink"] img').getAttribute('src');
+            let thumbnail = element.querySelector('a.imagelink img, a[class*="imagelink"] img')?.getAttribute('src') || undefined;
             if (thumbnail && !thumbnail.startsWith('https://www.bing.com')) {
                 thumbnail = 'https://www.bing.com/' + thumbnail;
             }
@@ -76,7 +79,6 @@ export const bing_news: Engine = {
                 url,
                 title,
                 content: fullContent,
-                thumbnail,
                 engine: 'bing_news'
             });
         });

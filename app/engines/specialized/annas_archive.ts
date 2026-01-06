@@ -29,15 +29,15 @@ export const annas_archive: Engine = {
         document.querySelectorAll('main div.js-aarecord-list-outer > div').forEach((element) => {
             const elElem = element;
 
-            const href = $el.querySelector('a').getAttribute('href');
+            const href = elElem.querySelector('a')?.getAttribute('href');
             if (!href) return;
 
             const url = `https://annas-archive.org${href}`;
-            const title = $el.querySelectorAll('a[href^="/md5"]').textContent?.trim() || \'\';
-            const author = $el.querySelector('a[href^="/search"]').textContent?.trim() || \'\';
-            const publisher = $el.querySelectorAll('a[href^="/search"]')[1].textContent?.trim() || \'\';
-            const description = $el.querySelectorAll('div.relative').textContent?.trim() || \'\';
-            const thumbnail = $el.querySelectorAll('img').getAttribute('src');
+            const title = elElem.querySelector('a[href^="/md5"]')?.textContent?.trim() || '';
+            const author = elElem.querySelector('a[href^="/search"]')?.textContent?.trim() || '';
+            const publisher = elElem.querySelectorAll('a[href^="/search"]')[1]?.textContent?.trim() || '';
+            const description = elElem.querySelector('div.relative')?.textContent?.trim() || '';
+            const thumbnail = elElem.querySelector('img')?.getAttribute('src') || undefined;
 
             const content = [
                 description,

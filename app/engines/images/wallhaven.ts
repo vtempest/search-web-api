@@ -16,8 +16,9 @@ export const wallhaven: Engine = {
             }
         });
     },
-    response: async (json: any) => {
+    response: async (response: any) => {
         const results: EngineResult[] = [];
+        const json = response.data || response;
 
         if (!json || !json.data) {
             return results;

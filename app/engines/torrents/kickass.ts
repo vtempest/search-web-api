@@ -25,21 +25,21 @@ export const kickass: Engine = {
 
         const { document } = parseHTML(data);
 
-        document.querySelectorAll('table.data tr').forEach((element) => {
+        document.querySelectorAll('table.data tr').forEach((element, i) => {
             // Skip header row
             if (i === 0) return;
 
             const rowElem = element;
-            const $link = $row.querySelectorAll('a.cellMainLink');
+            const $link = rowElem.querySelectorAll('a.cellMainLink');
 
             if (!$link.length) return;
 
-            const href = $link.getAttribute('href');
-            const title = $link.textContent?.trim() || \'\';
-            const description = $row.querySelectorAll('span.font11px.lightgrey.block').textContent?.trim() || \'\';
-            const seed = parseInt($row.querySelectorAll('td.green').textContent?.trim() || \'\') || 0;
-            const leech = parseInt($row.querySelectorAll('td.red').textContent?.trim() || \'\') || 0;
-            const filesize = $row.querySelectorAll('td.nobr').textContent?.trim() || \'\';
+            const href = $link[0]?.getAttribute('href');
+            const title = $link[0]?.textContent?.trim() || '';
+            const description = rowElem.querySelector('span.font11px.lightgrey.block')?.textContent?.trim() || '';
+            const seed = parseInt(rowElem.querySelector('td.green')?.textContent?.trim() || '') || 0;
+            const leech = parseInt(rowElem.querySelector('td.red')?.textContent?.trim() || '') || 0;
+            const filesize = rowElem.querySelector('td.nobr')?.textContent?.trim() || '';
 
             const content = [
                 description,
@@ -52,14 +52,10 @@ export const kickass: Engine = {
                 url: `https://kickasstorrents.to${href}`,
                 title,
                 content,
-                engine: 'kickass',
-                seed,
-                leech,
-                filesize
+                engine: 'kickass'
             });
         });
 
-        // Sort by seed count
-        return results.sort((a, b) => (b.seed || 0) - (a.seed || 0));
+        return results;
     }
 };

@@ -28,16 +28,16 @@ export const deviantart: Engine = {
             const elElem = element;
 
             // Skip premium/blurred images
-            const premiumText = $el.parent().querySelectorAll('div div div').textContent;
+            const premiumText = elElem.parentElement?.querySelector('div div div')?.textContent;
             if (premiumText && premiumText.includes('Watch the artist to view')) {
                 return;
             }
 
-            const url = $el.getAttribute('href');
-            const title = $el.getAttribute('aria-label');
-            const thumbnail = $el.querySelectorAll('div img').getAttribute('src');
+            const url = elElem.getAttribute('href');
+            const title = elElem.getAttribute('aria-label');
+            const thumbnail = elElem.querySelector('div img')?.getAttribute('src') || undefined;
 
-            let imgSrc = $el.querySelectorAll('div img').getAttribute('srcset');
+            let imgSrc = elElem.querySelector('div img')?.getAttribute('srcset');
             if (imgSrc) {
                 // Get the highest quality image from srcset
                 imgSrc = imgSrc.split(' ')[0];
@@ -60,8 +60,7 @@ export const deviantart: Engine = {
                     title,
                     content: '',
                     engine: 'deviantart',
-                    img_src: imgSrc || thumbnail,
-                    thumbnail
+                    thumbnail: imgSrc || thumbnail
                 });
             }
         });

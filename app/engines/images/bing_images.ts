@@ -1,4 +1,4 @@
-import { Engine, EngineResult } from '../../lib/engine.js';
+import { Engine, EngineResult } from '../../lib/engine';
 import grab from 'grab-url';
 import { parseHTML } from 'linkedom';
 
@@ -28,7 +28,8 @@ export const bing_images: Engine = {
         });
 
     },
-    response: async (html: string) => {
+    response: async (response: any) => {
+        const html = response.data || response;
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
@@ -37,7 +38,7 @@ export const bing_images: Engine = {
             const element = el;
 
             // Extract metadata from 'm' attribute
-            const metadataStr = element.querySelectorAll('a.iusc').getAttribute('m');
+            const metadataStr = element.querySelector('a.iusc')?.getAttribute('m');
             if (!metadataStr) {
                 return; // continue to next iteration
             }
@@ -46,9 +47,9 @@ export const bing_images: Engine = {
                 const metadata = JSON.parse(metadataStr);
 
                 // Extract additional info
-                const title = element.querySelectorAll('div.infnmpt a').textContent?.trim() || \'\' || metadata.t || '';
-                const imgFormat = element.querySelectorAll('div.imgpt div span').textContent?.trim() || \'\';
-                const source = element.querySelectorAll('div.imgpt div.lnkw a').textContent?.trim() || \'\';
+                const title = element.querySelector('div.infnmpt a')?.textContent?.trim() || metadata.t || '';
+                const imgFormat = element.querySelector('div.imgpt div span')?.textContent?.trim() || '';
+                const source = element.querySelector('div.imgpt div.lnkw a')?.textContent?.trim() || '';
 
                 // Parse resolution and format from imgFormat
                 const formatParts = imgFormat.split(' · ');

@@ -1,8 +1,7 @@
 
-import * as cheerio from 'cheerio';
-
-export function extractText(element: cheerio.Cheerio<any>): string {
-    return element.text().trim().replace(/\s+/g, ' ');
+export function extractText(element: any): string {
+    const text = element.textContent || element.innerText || '';
+    return text.trim().replace(/\s+/g, ' ');
 }
 
 export function getJson(text: string): any {

@@ -1,4 +1,4 @@
-import { Engine, EngineResult } from '../lib/engine';
+import { Engine, EngineResult } from '../../lib/engine';
 import grab from 'grab-url';
 
 export const qwant: Engine = {

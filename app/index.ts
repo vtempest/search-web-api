@@ -1,13 +1,18 @@
 
 import { Hono } from 'hono';
-import { swaggerUI } from '@hono/swagger-ui';
+import { apiReference } from '@scalar/hono-api-reference';
 import searchRoute from './routes/search.js';
 import { openAPISpec } from './openapi.js';
 
 const app = new Hono();
 
-// Swagger UI endpoint
-app.get('/docs', swaggerUI({ url: '/openapi.json' }));
+// Scalar API Reference endpoint
+// @ts-ignore: Type definition mismatch but runtime works
+app.get('/docs', apiReference({
+    spec: {
+        url: '/openapi.json',
+    }
+}));
 
 // OpenAPI JSON spec endpoint
 app.get('/openapi.json', (c) => {

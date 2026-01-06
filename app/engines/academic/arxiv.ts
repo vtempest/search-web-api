@@ -1,5 +1,5 @@
-import { Engine, EngineResult } from '../../lib/engine.js';
-import grab from 'grab-url';
+import { Engine, EngineResult } from '../../lib/engine';
+
 import { parseHTML } from 'linkedom';
 export const arxiv: Engine = {
     name: 'arxiv',
@@ -17,33 +17,32 @@ export const arxiv: Engine = {
 
         const url = `https://export.arxiv.org/api/query?${queryParams.toString()}`;
 
-        return await grab(url, {
-            responseType: 'text',
+        const response = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'application/atom+xml,application/xml,text/xml',
             }
         });
+        return await response.text();
 
     },
-    response: async (xml: string) => {
+    response: async (response: any) => {
+        const xml = typeof response === 'string' ? response : response.data || response;
+        const { document } = parseHTML(xml);
         const results: EngineResult[] = [];
-
-        // Parse XML using cheerio
-        const $ = cheerio.load(xml, { xmlMode: true });
 
         // Get all entry elements
         document.querySelectorAll('entry').forEach((entry) => {
             const entryElem = entry;
 
             // Extract title
-            const title = ($entry.querySelectorAll('title')?.textContent?.trim() || \'\').replace(/\s+/g, ' ').trim();
+            const title = (entryElem.querySelector('title')?.textContent?.trim() || '').replace(/\s+/g, ' ').trim();
 
             // Extract URL (id)
-            const url = ($entry.querySelectorAll('id')?.textContent?.trim() || \'\');
+            const url = (entryElem.querySelector('id')?.textContent?.trim() || '');
 
             // Extract abstract (summary)
-            let abstract = ($entry.querySelectorAll('summary')?.textContent?.trim() || \'\').replace(/\s+/g, ' ').trim();
+            let abstract = (entryElem.querySelector('summary')?.textContent?.trim() || '').replace(/\s+/g, ' ').trim();
 
             // Truncate abstract if too long
             if (abstract.length > 500) {
@@ -52,16 +51,16 @@ export const arxiv: Engine = {
 
             // Extract authors
             const authors: string[] = [];
-            $entry.querySelectorAll('author name').each((j, authorName) => {
-                authors.push(authorName.textContent?.trim() || \'\');
+            entryElem.querySelectorAll('author name').forEach((authorName) => {
+                authors.push(authorName.textContent?.trim() || '');
             });
 
             // Extract published date
-            const publishedDate = ($entry.querySelectorAll('published')?.textContent?.trim() || \'\');
+            const publishedDate = (entryElem.querySelector('published')?.textContent?.trim() || '');
 
             // Extract categories (tags)
             const categories: string[] = [];
-            $entry.querySelectorAll('category').each((j, cat) => {
+            entryElem.querySelectorAll('category').forEach((cat) => {
                 const term = cat.getAttribute('term');
                 if (term) {
                     categories.push(term);

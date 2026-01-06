@@ -1,5 +1,6 @@
-import { Engine, EngineResult } from './engine.js';
+import { Engine } from './engine.js';
 import { engineStatusTracker } from './engine-status.js';
+import { ResultContainer, MergedResult } from './result-container.js';
 
 // General search engines
 import { google } from '../engines/general/google';
@@ -122,9 +123,24 @@ export class Search {
         });
     }
 
-    async search(query: string, pageno: number = 1, engineNames?: string[], categories?: string[]): Promise<EngineResult[]> {
-        const results: EngineResult[] = [];
-        const urlMap = new Map<string, EngineResult>(); // For deduplication
+    async search(query: string, pageno: number = 1, engineNames?: string[], categories?: string[]): Promise<MergedResult[]> {
+        // Create a new result container for this search
+        const resultContainer = new ResultContainer();
+
+        // Configure engine weights (you can customize these based on engine quality/reliability)
+        const engineWeights: { [key: string]: number } = {
+            'google': 1.5,
+            'bing': 1.3,
+            'duckduckgo': 1.2,
+            'brave': 1.1,
+            'startpage': 1.1,
+            // Academic engines get higher weight for quality
+            'google_scholar': 1.4,
+            'semantic_scholar': 1.3,
+            'arxiv': 1.3,
+            // Default weight for others: 1.0
+        };
+        resultContainer.setEngineWeights(engineWeights);
 
         const promises = this.engines
             .filter(engine => {
@@ -151,39 +167,16 @@ export class Search {
                     const responseTime = Date.now() - startTime;
                     engineStatusTracker.recordSuccess(engine.name, responseTime, query);
 
-                    // Add engine name to each result
+                    // Add category to each result from engine's categories
                     engineResults.forEach(result => {
-                        result.engine = engine.name;
-
-                        // Deduplicate by URL within same category
-                        const url = result.url || result.link;
-                        if (url) {
-                            const normalizedUrl = this.normalizeUrl(url);
-                            const existing = urlMap.get(normalizedUrl);
-
-                            if (!existing) {
-                                // First occurrence of this URL
-                                urlMap.set(normalizedUrl, result);
-                                results.push(result);
-                            } else {
-                                // URL already exists from another engine
-                                // Merge engine names if in same category
-                                if (engine.categories?.some(cat =>
-                                    this.getEngineByName(existing.engine || '')?.categories?.includes(cat)
-                                )) {
-                                    // Update existing result to show multiple engines
-                                    existing.engine = `${existing.engine},${engine.name}`;
-                                    console.log(`Deduplicated URL ${normalizedUrl} from engines: ${existing.engine}`);
-                                } else {
-                                    // Different category, allow duplicate
-                                    results.push(result);
-                                }
-                            }
-                        } else {
-                            // No URL, can't deduplicate
-                            results.push(result);
+                        if (!result.category && engine.categories && engine.categories.length > 0) {
+                            result.category = engine.categories[0];
                         }
                     });
+
+                    // Add results to container (handles deduplication and merging)
+                    resultContainer.extend(engine.name, engineResults);
+
                 } catch (error) {
                     const responseTime = Date.now() - startTime;
                     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -194,29 +187,18 @@ export class Search {
             });
 
         await Promise.all(promises);
-        return results;
-    }
 
-    /**
-     * Normalize URL for deduplication (remove protocol, trailing slash, www, query params)
-     */
-    private normalizeUrl(url: string): string {
-        try {
-            const urlObj = new URL(url);
-            let normalized = urlObj.hostname.replace(/^www\./, '') + urlObj.pathname;
-            normalized = normalized.replace(/\/$/, ''); // Remove trailing slash
-            return normalized.toLowerCase();
-        } catch {
-            // If URL parsing fails, return as-is
-            return url.toLowerCase();
-        }
-    }
+        // Close container to calculate scores
+        resultContainer.close();
 
-    /**
-     * Get engine by name
-     */
-    private getEngineByName(name: string): Engine | undefined {
-        return this.engines.find(e => e.name === name);
+        // Get ordered and grouped results
+        const orderedResults = resultContainer.getOrderedResults();
+
+        // Log statistics
+        const stats = resultContainer.getStats();
+        console.log(`Search "${query}": ${stats.totalResults} results, ${stats.duplicatesMerged} merged, avg ${stats.engineCoverage.toFixed(1)} engines/result`);
+
+        return orderedResults;
     }
 
     /**

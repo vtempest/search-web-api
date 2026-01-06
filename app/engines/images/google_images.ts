@@ -1,4 +1,4 @@
-import { Engine, EngineResult } from '../../lib/engine.js';
+import { Engine, EngineResult, extractResponseData } from '../../lib/engine.js';
 import grab from 'grab-url';
 
 export const google_images: Engine = {
@@ -28,8 +28,14 @@ export const google_images: Engine = {
         });
 
     },
-    response: async (html: string) => {
+    response: async (response: any) => {
         const results: EngineResult[] = [];
+        const html = extractResponseData(response);
+
+        // If extractResponseData returned empty (due to error), return empty results
+        if (!html || typeof html !== 'string') {
+            return results;
+        }
 
         try {
             // Find JSON data in response

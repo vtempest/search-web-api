@@ -28,10 +28,10 @@ export const openclipart: Engine = {
         document.querySelectorAll('div.gallery div.artwork').forEach((element) => {
             const elElem = element;
 
-            const $link = $el.querySelector('a');
-            const href = $link.getAttribute('href');
-            const title = $link.querySelectorAll('img').getAttribute('alt');
-            const imgSrc = $link.querySelectorAll('img').getAttribute('src');
+            const $link = elElem.querySelector('a');
+            const href = $link?.getAttribute('href');
+            const title = $link?.querySelector('img')?.getAttribute('alt');
+            const imgSrc = $link?.querySelector('img')?.getAttribute('src');
 
             if (!href || !title || !imgSrc) return;
 
@@ -40,7 +40,7 @@ export const openclipart: Engine = {
                 title,
                 content: '',
                 engine: 'openclipart',
-                img_src: `https://openclipart.org${imgSrc}`
+                thumbnail: `https://openclipart.org${imgSrc}` || undefined
             });
         });
 

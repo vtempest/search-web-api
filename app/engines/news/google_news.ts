@@ -33,7 +33,7 @@ export const google_news: Engine = {
             const elElem = element;
 
             // Extract the article link
-            const href = $el.querySelector('article a').getAttribute('href');
+            const href = elElem.querySelector('article a')?.getAttribute('href');
             if (!href) return;
 
             // Decode the Google News internal link
@@ -46,10 +46,10 @@ export const google_news: Engine = {
                 if (httpIndex === -1) return;
                 const actualUrl = decodedStr.slice(httpIndex).split('\xd2')[0];
 
-                const title = $el.querySelector('article h3').textContent?.trim() || \'\';
-                const pubDate = $el.querySelectorAll('article time').textContent?.trim() || \'\';
-                const pubOrigin = $el.querySelectorAll('article a[data-n-tid]').textContent?.trim() || \'\';
-                const thumbnail = $el.prev('a').querySelectorAll('figure img').getAttribute('src') || '';
+                const title = elElem.querySelector('article h3')?.textContent?.trim() || '';
+                const pubDate = elElem.querySelector('article time')?.textContent?.trim() || '';
+                const pubOrigin = elElem.querySelector('article a[data-n-tid]')?.textContent?.trim() || '';
+                const thumbnail = elElem.previousElementSibling?.querySelector('figure img')?.getAttribute('src') || undefined;
 
                 const content = [pubOrigin, pubDate].filter(Boolean).join(' / ');
 

@@ -1,9 +1,9 @@
-import { Engine, EngineResult } from '../lib/engine';
-import grab from 'grab-url';
+import { Engine, EngineResult } from '../../lib/engine';
+
 import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
+    return element.textContent?.trim() || ''.replace(/\s+/g, ' ');
 };
 
 export const thepiratebay: Engine = {
@@ -13,26 +13,27 @@ export const thepiratebay: Engine = {
         const pageno = params.pageno || 1;
         const url = `https://thepiratebay.org/search.php?q=${encodeURIComponent(query)}&page=${pageno - 1}`;
 
-        return await grab(url, {
-            responseType: 'text',
+        const response = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             }
         });
+        return await response.text();
 
     },
-    response: async (html: string) => {
-        const { document } = parseHTML(html);
+    response: async (response: any) => {
+        const html = typeof response === 'string' ? response : response.data || response;
+        const { document} = parseHTML(html);
         const results: EngineResult[] = [];
 
         document.querySelectorAll('#searchResult tbody tr').forEach((el) => {
             const element = el;
-            const titleLink = element.querySelectorAll('td.vertTh a.detLink');
-            const magnetLink = element.querySelectorAll('a[href^="magnet:"]');
-            const title = (titleLink)?.textContent?.trim() || \'\';
-            const url = magnetLink.getAttribute('href') || '';
-            const descElement = element.querySelectorAll('font.detDesc');
-            const descText = (descElement)?.textContent?.trim() || \'\';
+            const titleLink = element.querySelector('td.vertTh a.detLink');
+            const magnetLink = element.querySelector('a[href^="magnet:"]');
+            const title = titleLink?.textContent?.trim() || '';
+            const url = magnetLink?.getAttribute('href') || '';
+            const descElement = element.querySelector('font.detDesc');
+            const descText = descElement?.textContent?.trim() || '';
 
             // Extract size, uploader, and date from description
             const sizeMatch = descText.match(/Size\s+([^,]+)/i);
@@ -41,8 +42,9 @@ export const thepiratebay: Engine = {
             const uploader = uploaderMatch ? uploaderMatch[1] : 'Unknown';
 
             // Get seeders and leechers
-            const seeders = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[2]);
-            const leechers = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[3]);
+            const tds = element.querySelectorAll('td');
+            const seeders = tds[2]?.textContent?.trim() || '';
+            const leechers = tds[3]?.textContent?.trim() || '';
 
             if (url && title) {
                 results.push({

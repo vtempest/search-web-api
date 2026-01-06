@@ -1,9 +1,9 @@
-import { Engine, EngineResult } from '../lib/engine';
-import grab from 'grab-url';
+import { Engine, EngineResult } from '../../lib/engine';
+
 import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
+    return element.textContent?.trim() || ''.replace(/\s+/g, ' ');
 };
 
 export const nyaa: Engine = {
@@ -13,32 +13,35 @@ export const nyaa: Engine = {
         const pageno = params.pageno || 1;
         const url = `https://nyaa.si/?f=0&c=0_0&q=${encodeURIComponent(query)}&p=${pageno}`;
 
-        return await grab(url, {
-            responseType: 'text',
+        const response = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             }
         });
+        return await response.text();
 
     },
-    response: async (html: string) => {
+    response: async (response: any) => {
+        const html = typeof response === 'string' ? response : response.data || response;
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         document.querySelectorAll('table.torrent-list tbody tr').forEach((el) => {
             const element = el;
-            const category = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[0]);
-            const titleColumn = element.querySelectorAll('td')[1];
-            const titleLink = titleColumn.querySelectorAll('a').not('.comments').last();
-            const magnetLink = element.querySelectorAll('a[href^="magnet:"]');
-            const title = (titleLink)?.textContent?.trim() || \'\';
-            const url = magnetLink.getAttribute('href') || '';
+            const tds = element.querySelectorAll('td');
+            const category = tds[0]?.textContent?.trim() || '';
+            const titleColumn = tds[1];
+            // find 'a' elements in titleColumn, filter out .comments
+            const titleLink = titleColumn?.querySelector('a:not(.comments)'); // Assuming simple check or just taking first non-comment
+            const magnetLink = element.querySelector('a[href^="magnet:"]');
+            const title = titleLink?.textContent?.trim() || '';
+            const url = magnetLink?.getAttribute('href') || '';
 
             // Get torrent metadata
-            const size = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[3]);
-            const seeders = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[5]);
-            const leechers = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[6]);
-            const downloads = (element.querySelectorAll('td')?.textContent?.trim() || \'\'[7]);
+            const size = tds[3]?.textContent?.trim() || '';
+            const seeders = tds[5]?.textContent?.trim() || '';
+            const leechers = tds[6]?.textContent?.trim() || '';
+            const downloads = tds[7]?.textContent?.trim() || '';
 
             if (url && title) {
                 results.push({

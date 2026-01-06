@@ -1,9 +1,9 @@
-import { Engine, EngineResult } from '../lib/engine';
-import grab from 'grab-url';
+import { Engine, EngineResult } from '../../lib/engine';
+
 import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
+    return element.textContent?.trim() || ''.replace(/\s+/g, ' ');
 };
 
 export const yahoo: Engine = {
@@ -14,26 +14,27 @@ export const yahoo: Engine = {
         const start = (pageno - 1) * 7; // Yahoo usually displays 7 results per page
         const url = `https://search.yahoo.com/search?p=${encodeURIComponent(query)}&b=${start + 1}`;
 
-        return await grab(url, {
-            responseType: 'text',
+        const response = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.9',
             }
         });
+        return await response.text();
 
     },
-    response: async (html: string) => {
+    response: async (response: any) => {
+        const html = typeof response === 'string' ? response : response.data || response;
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
         document.querySelectorAll('.algo-sr').forEach((el) => {
             const element = el;
             const link = element.querySelector('a');
-            const url = link.getAttribute('href');
-            const title = (link)?.textContent?.trim() || \'\';
-            const content = (element.querySelectorAll('.compText')?.textContent?.trim() || \'\');
+            const url = link?.getAttribute('href');
+            const title = link?.textContent?.trim() || '';
+            const content = element.querySelector('.compText')?.textContent?.trim() || '';
 
             if (url && title) {
                 // Yahoo URLs are often wrapped, try to extract real URL if possible

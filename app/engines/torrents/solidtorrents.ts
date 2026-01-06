@@ -28,18 +28,18 @@ export const solidtorrents: Engine = {
         document.querySelectorAll('li.search-result').forEach((element) => {
             const elElem = element;
 
-            const torrentfile = $el.querySelectorAll('a.dl-torrent').getAttribute('href');
-            const magnet = $el.querySelectorAll('a.dl-magnet').getAttribute('href');
+            const torrentfile = elElem.querySelector('a.dl-torrent')?.getAttribute('href');
+            const magnet = elElem.querySelector('a.dl-magnet')?.getAttribute('href');
 
             if (!torrentfile || !magnet) {
                 return; // skip results without torrent links
             }
 
-            const title = $el.querySelectorAll('h5.title').textContent?.trim() || \'\';
-            const url = $el.querySelectorAll('h5.title a').getAttribute('href');
-            const category = $el.querySelectorAll('a.category').textContent?.trim() || \'\';
+            const title = elElem.querySelector('h5.title')?.textContent?.trim() || '';
+            const url = elElem.querySelector('h5.title a')?.getAttribute('href');
+            const category = elElem.querySelector('a.category')?.textContent?.trim() || '';
 
-            const stats = $el.querySelectorAll('.stats div').map((_, el) => el.textContent?.trim() || \'\').get();
+            const stats = Array.from(elElem.querySelectorAll('.stats div')).map((el) => el.textContent?.trim() || '');
 
             const content = [
                 category ? `Category: ${category}` : '',
@@ -53,9 +53,7 @@ export const solidtorrents: Engine = {
                 url: `https://solidtorrents.to${url}`,
                 title,
                 content,
-                engine: 'solidtorrents',
-                magnetlink: magnet,
-                torrentfile
+                engine: 'solidtorrents'
             });
         });
 

@@ -1,5 +1,6 @@
 {
     "name": "search-extract-web-api",
+    "description": "Web Meta-Search Engine and Scrape Extract API",
     "type": "module",
     "scripts": {
         "dev": "bun --watch app/index.ts",
@@ -9,11 +10,10 @@
         "test:coverage": "vitest run --coverage"
     },
     "dependencies": {
-        "linkedom": "^0.18.0",
+        "@scalar/hono-api-reference": "^0.9.26",
         "grab-url": "^1.0.8",
         "hono": "^4.6.12",
-        "ioredis": "^5.8.2",
-        "undici": "^7.16.0"
+        "linkedom": "^0.18.0"
     },
     "devDependencies": {
         "@types/node": "^20.11.17",

@@ -28,23 +28,24 @@ export const goodreads: Engine = {
         document.querySelectorAll('table tr').forEach((element) => {
             const rowElem = element;
 
-            const $link = $row.querySelectorAll('a.bookTitle');
-            const href = $link.getAttribute('href');
-            const title = $link.textContent?.trim() || \'\';
+            const $link = rowElem.querySelector('a.bookTitle');
+            const href = $link?.getAttribute('href');
+            const title = $link?.textContent?.trim() || '';
 
             if (!href || !title) return;
 
-            const thumbnail = $row.querySelectorAll('img.bookCover').getAttribute('src');
-            const author = $row.querySelectorAll('a.authorName').textContent?.trim() || \'\';
-            const info = $row.querySelectorAll('span.uitext').textContent?.trim() || \'\';
+            const thumbnail = rowElem.querySelector('img.bookCover')?.getAttribute('src') || undefined;
+            const author = rowElem.querySelector('a.authorName')?.textContent?.trim() || '';
+            const info = rowElem.querySelector('span.uitext')?.textContent?.trim() || '';
+
+            const content = [info, author ? `Author: ${author}` : ''].filter(Boolean).join(' | ');
 
             results.push({
                 url: `https://www.goodreads.com${href}`,
                 title,
-                content: info,
+                content,
                 engine: 'goodreads',
-                thumbnail,
-                metadata: author
+                thumbnail
             });
         });
 

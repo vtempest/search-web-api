@@ -29,11 +29,11 @@ export const mojeek: Engine = {
 
         document.querySelectorAll('ul.results-standard li a.ob').forEach((element) => {
             const elElem = element;
-            const url = $el.getAttribute('href');
-            const $parent = $el.parent();
+            const url = elElem.getAttribute('href');
+            const $parent = elElem.parentElement;
 
-            const title = $parent.querySelectorAll('h2 a').textContent?.trim() || \'\';
-            const content = $parent.querySelectorAll('p.s').textContent?.trim() || \'\';
+            const title = $parent?.querySelector('h2 a')?.textContent?.trim() || '';
+            const content = $parent?.querySelector('p.s')?.textContent?.trim() || '';
 
             if (url && title) {
                 results.push({

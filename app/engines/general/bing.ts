@@ -21,7 +21,8 @@ export const bing: Engine = {
         });
 
     },
-    response: async (html: string) => {
+    response: async (response: any) => {
+        const html = response.data || response;
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 

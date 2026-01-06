@@ -13,15 +13,16 @@ export const pubmed: Engine = {
         // Step 1: Search for PMIDs
         const esearchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(query)}&retstart=${retstart}&hits=${number_of_results}`;
 
-        const esearchData = await grab(esearchUrl, {
+        const esearchResponse = await grab(esearchUrl, {
             responseType: 'text',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             }
         });
 
-        // Parse XML to get PMIDs
-        const $ = cheerio.load(esearchData, { xmlMode: true });
+        // Parse XML to get PMIDs using linkedom
+        const esearchData = esearchResponse.data || esearchResponse;
+        const { document } = parseHTML(esearchData);
         const pmids: string[] = [];
         document.querySelectorAll('Id').forEach((elem) => {
             const pmid = elem.textContent;
@@ -42,32 +43,34 @@ export const pubmed: Engine = {
             }
         });
     },
-    response: async (data: any) => {
+    response: async (response: any) => {
         const results: EngineResult[] = [];
+        const data = response.data || response;
 
         if (!data || typeof data !== 'string') {
             return results;
         }
 
-        const $ = cheerio.load(data, { xmlMode: true });
+        // Parse XML using linkedom
+        const { document } = parseHTML(data);
 
         document.querySelectorAll('PubmedArticle').forEach((article) => {
-            const articleElem = article;
-
-            const title = $article.querySelector('ArticleTitle').textContent || '';
-            const pmid = $article.querySelector('PMID').textContent || '';
+            const title = article.querySelector('ArticleTitle')?.textContent || '';
+            const pmid = article.querySelector('PMID')?.textContent || '';
             const url = `https://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
 
-            const abstract = $article.querySelectorAll('AbstractText').textContent || '';
-            const journal = $article.querySelector('Journal Title').textContent || '';
-            const doi = $article.querySelector('ELocationID[EIdType="doi"]').textContent || '';
+            // Get abstract text
+            const abstractElements = article.querySelectorAll('AbstractText');
+            const abstract = Array.from(abstractElements).map(el => el.textContent).join(' ');
+
+            const journal = article.querySelector('Journal Title')?.textContent || '';
+            const doi = article.querySelector('ELocationID[EIdType="doi"]')?.textContent || '';
 
             // Parse authors
             const authors: string[] = [];
-            $article.querySelectorAll('AuthorList Author').each((_, author) => {
-                const authorElem = author;
-                const firstName = $author.querySelectorAll('ForeName').textContent;
-                const lastName = $author.querySelectorAll('LastName').textContent;
+            article.querySelectorAll('AuthorList Author').forEach((author) => {
+                const firstName = author.querySelector('ForeName')?.textContent || '';
+                const lastName = author.querySelector('LastName')?.textContent || '';
                 const authorName = `${firstName} ${lastName}`.trim();
                 if (authorName) authors.push(authorName);
             });

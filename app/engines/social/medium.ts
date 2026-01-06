@@ -1,9 +1,9 @@
-import { Engine, EngineResult } from '../lib/engine';
-import grab from 'grab-url';
+import { Engine, EngineResult } from '../../lib/engine';
+
 import { parseHTML } from 'linkedom';
 
 const extractText = (element: any) => {
-    return element.textContent?.trim() || \'\'.replace(/\s+/g, ' ');
+    return element.textContent?.trim() || ''.replace(/\s+/g, ' ');
 };
 
 export const medium: Engine = {
@@ -13,15 +13,16 @@ export const medium: Engine = {
         const pageno = params.pageno || 1;
         const url = `https://medium.com/search?q=${encodeURIComponent(query)}`;
 
-        return await grab(url, {
-            responseType: 'text',
+        const response = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
             }
         });
+        return await response.text();
 
     },
-    response: async (html: string) => {
+    response: async (response: any) => {
+        const html = typeof response === 'string' ? response : response.data || response;
         const { document } = parseHTML(html);
         const results: EngineResult[] = [];
 
@@ -29,12 +30,12 @@ export const medium: Engine = {
         document.querySelectorAll('article').forEach((el) => {
             const element = el;
             const titleLink = element.querySelector('h2 a, h3 a');
-            const title = (titleLink)?.textContent?.trim() || \'\';
-            const href = titleLink.getAttribute('href');
+            const title = titleLink?.textContent?.trim() || '';
+            const href = titleLink?.getAttribute('href');
             const url = href ? (href.startsWith('http') ? href : `https://medium.com${href}`) : '';
-            const content = (element.querySelector('p')?.textContent?.trim() || \'\');
-            const author = (element.querySelector('a[rel="author"]')?.textContent?.trim() || \'\');
-            const readTime = (element.querySelector('[aria-label*="read"]')?.textContent?.trim() || \'\');
+            const content = element.querySelector('p')?.textContent?.trim() || '';
+            const author = element.querySelector('a[rel="author"]')?.textContent?.trim() || '';
+            const readTime = element.querySelector('[aria-label*="read"]')?.textContent?.trim() || '';
 
             if (url && title) {
                 results.push({
