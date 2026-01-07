@@ -39,17 +39,12 @@ export const arxiv: EngineFunction = async (
               published = entry
                 .querySelector("published")
                 ?.textContent?.split("T")[0],
-              categories = Array.from(entry.querySelectorAll("category"))
-                .map((cat) => cat.getAttribute("term"))
-                .filter(Boolean),
               meta = [
                 authors.length &&
                   `Authors: ${authors.slice(0, 3).join(", ")}${
                     authors.length > 3 ? " et al." : ""
                   }`,
                 published && `Published: ${published}`,
-                categories.length &&
-                  `Categories: ${categories.slice(0, 3).join(", ")}`,
               ]
                 .filter(Boolean)
                 .join(" | ");
@@ -58,6 +53,9 @@ export const arxiv: EngineFunction = async (
               url,
               title,
               content: meta ? `${meta}\n\n${abstract}` : abstract,
+              author: authors.join(", "),
+              date: published,
+              abstract,
               engine: "arxiv",
             };
           })

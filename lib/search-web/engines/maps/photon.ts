@@ -1,80 +1,80 @@
-import { Engine, EngineResult } from '../../engine.js';
-import grab from 'grab-url';
+import grab from "grab-url";
+import { EngineFunction } from "../../engine";
 
-export const photon: Engine = {
-    name: 'photon',
-    categories: ['maps'],
-    request: async (query: string, params: any = {}) => {
-        const limit = 10;
+export const photon: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab(
+      `https://photon.komoot.io/api/?${new URLSearchParams({
+        q: query,
+        limit: "10",
+        lang: "en",
+      }).toString()}`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+        onResponse(path: string, response: any) {
+          const features = response?.features || [];
 
-        const queryParams = new URLSearchParams({
-            q: query,
-            limit: String(limit),
-            lang: 'en',
-        });
+          response.data = features
+            .map((feature: any) => {
+              const properties = feature.properties;
 
-        const url = `https://photon.komoot.io/api/?${queryParams.toString()}`;
+              if (!properties) {
+                return null;
+              }
 
-        return await grab(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            }
-        });
+              const name = properties.name || "";
+              const osmType = properties.osm_type;
 
-    },
-    response: async (data: any) => {
-        const results: EngineResult[] = [];
+              // Map OSM type to string
+              let osmTypeStr = "";
+              if (osmType === "N") osmTypeStr = "node";
+              else if (osmType === "W") osmTypeStr = "way";
+              else if (osmType === "R") osmTypeStr = "relation";
+              else return null;
 
-        const features = data.features || [];
+              const osmId = properties.osm_id;
+              const url = `https://openstreetmap.org/${osmTypeStr}/${osmId}`;
 
-        for (const feature of features) {
-            const properties = feature.properties;
+              // Build address
+              const addressParts: string[] = [];
+              if (properties.street) addressParts.push(properties.street);
+              if (properties.housenumber)
+                addressParts.push(properties.housenumber);
+              if (properties.city) addressParts.push(properties.city);
+              if (properties.postcode) addressParts.push(properties.postcode);
+              if (properties.country) addressParts.push(properties.country);
 
-            if (!properties) {
-                continue;
-            }
+              // Get coordinates
+              const geometry = feature.geometry;
+              const coordinates = geometry?.coordinates || [];
+              const lon = coordinates[0];
+              const lat = coordinates[1];
 
-            const name = properties.name || '';
-            const osmType = properties.osm_type;
+              const content = [
+                addressParts.join(", "),
+                properties.type ? `Type: ${properties.type}` : "",
+                coordinates.length === 2 ? `Coordinates: ${lat}, ${lon}` : "",
+              ]
+                .filter(Boolean)
+                .join("\n");
 
-            // Map OSM type to string
-            let osmTypeStr = '';
-            if (osmType === 'N') osmTypeStr = 'node';
-            else if (osmType === 'W') osmTypeStr = 'way';
-            else if (osmType === 'R') osmTypeStr = 'relation';
-            else continue;
-
-            const osmId = properties.osm_id;
-            const url = `https://openstreetmap.org/${osmTypeStr}/${osmId}`;
-
-            // Build address
-            const addressParts: string[] = [];
-            if (properties.street) addressParts.push(properties.street);
-            if (properties.housenumber) addressParts.push(properties.housenumber);
-            if (properties.city) addressParts.push(properties.city);
-            if (properties.postcode) addressParts.push(properties.postcode);
-            if (properties.country) addressParts.push(properties.country);
-
-            // Get coordinates
-            const geometry = feature.geometry;
-            const coordinates = geometry?.coordinates || [];
-            const lon = coordinates[0];
-            const lat = coordinates[1];
-
-            const content = [
-                addressParts.join(', '),
-                properties.type ? `Type: ${properties.type}` : '',
-                coordinates.length === 2 ? `Coordinates: ${lat}, ${lon}` : ''
-            ].filter(Boolean).join('\n');
-
-            results.push({
+              return {
                 url,
                 title: name,
                 content,
-                engine: 'photon'
-            });
-        }
+                engine: "photon",
+              };
+            })
+            .filter(Boolean);
 
-        return results;
-    }
-};
+          return [path, response];
+        },
+      }
+    )
+  )?.data;

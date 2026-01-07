@@ -1,72 +1,72 @@
-import { Engine, EngineResult } from "../../engine.js";
 import grab from "grab-url";
+import { EngineFunction, EngineResult } from "../../engine";
 import { parseHTML } from "linkedom";
 
-export const annas_archive: Engine = {
-  name: "annas_archive",
-  categories: ["specialized", "books", "files"],
-  request: async (query: string, params: any = {}) => {
-    const pageno = params.pageno || 1;
-
-    return await grab("https://annas-archive.org/search", {
+export const annas_archive: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab("https://annas-archive.org/search", {
       responseType: "text",
       q: query,
-      page: pageno,
+      page: page || 1,
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
       },
       timeout: 10,
-    });
-  },
-  response: async (data: any) => {
-    const results: EngineResult[] = [];
+      onResponse(path: string, response: any) {
+        const results: EngineResult[] = [];
 
-    if (!data || typeof data !== "string") {
-      return results;
-    }
+        if (!response || typeof response !== "string") {
+          response.data = results;
+          return [path, response];
+        }
 
-    const { document } = parseHTML(data);
+        const { document } = parseHTML(response);
 
-    document
-      .querySelectorAll("main div.js-aarecord-list-outer > div")
-      .forEach((element) => {
-        const elElem = element;
+        document
+          .querySelectorAll("main div.js-aarecord-list-outer > div")
+          .forEach((element) => {
+            const elElem = element;
 
-        const href = elElem.querySelector("a")?.getAttribute("href");
-        if (!href) return;
+            const href = elElem.querySelector("a")?.getAttribute("href");
+            if (!href) return;
 
-        const url = `https://annas-archive.org${href}`;
-        const title =
-          elElem.querySelector('a[href^="/md5"]')?.textContent?.trim() || "";
-        const author =
-          elElem.querySelector('a[href^="/search"]')?.textContent?.trim() || "";
-        const publisher =
-          elElem
-            .querySelectorAll('a[href^="/search"]')[1]
-            ?.textContent?.trim() || "";
-        const description =
-          elElem.querySelector("div.relative")?.textContent?.trim() || "";
-        const thumbnail =
-          elElem.querySelector("img")?.getAttribute("src") || undefined;
+            const url = `https://annas-archive.org${href}`;
+            const title =
+              elElem.querySelector('a[href^="/md5"]')?.textContent?.trim() || "";
+            const author =
+              elElem.querySelector('a[href^="/search"]')?.textContent?.trim() || "";
+            const publisher =
+              elElem
+                .querySelectorAll('a[href^="/search"]')[1]
+                ?.textContent?.trim() || "";
+            const description =
+              elElem.querySelector("div.relative")?.textContent?.trim() || "";
+            const thumbnail =
+              elElem.querySelector("img")?.getAttribute("src") || undefined;
 
-        const content = [
-          description,
-          author ? `Author: ${author}` : "",
-          publisher ? `Publisher: ${publisher}` : "",
-        ]
-          .filter(Boolean)
-          .join("\n");
+            const content = [
+              description,
+              author ? `Author: ${author}` : "",
+              publisher ? `Publisher: ${publisher}` : "",
+            ]
+              .filter(Boolean)
+              .join("\n");
 
-        results.push({
-          url,
-          title,
-          content,
-          engine: "annas_archive",
-          thumbnail,
-        });
-      });
+            results.push({
+              url,
+              title,
+              content,
+              engine: "annas_archive",
+              thumbnail,
+            });
+          });
 
-    return results;
-  },
-};
+        response.data = results;
+        return [path, response];
+      },
+    })
+  )?.data;

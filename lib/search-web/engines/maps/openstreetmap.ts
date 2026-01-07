@@ -1,33 +1,35 @@
-import { Engine, EngineResult } from '../lib/engine';
-import grab from 'grab-url';
+import grab from "grab-url";
+import { EngineFunction } from "../../engine";
 
-export const openstreetmap: Engine = {
-    name: 'openstreetmap',
-    categories: ['maps'],
-    request: async (query: string, params: any = {}) => {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=10`;
+export const openstreetmap: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+        query
+      )}&format=json&addressdetails=1&limit=10`,
+      {
+        headers: {
+          "User-Agent": "HonoxSearX/1.0",
+        },
+        onResponse(path: string, response: any) {
+          const json = response;
 
-        return await grab(url, {
-            headers: {
-                'User-Agent': 'HonoxSearX/1.0'
-            }
-        });
+          response.data = [];
 
-    },
-    response: async (json: any) => {
-        const results: EngineResult[] = [];
+          if (Array.isArray(json)) {
+            response.data = json.map((item: any) => ({
+              url: `https://www.openstreetmap.org/${item.osm_type}/${item.osm_id}`,
+              title: item.display_name,
+              content: `Type: ${item.type}, Class: ${item.class}`,
+              engine: "openstreetmap",
+            }));
+          }
 
-        if (Array.isArray(json)) {
-            json.forEach((item: any) => {
-                results.push({
-                    url: `https://www.openstreetmap.org/${item.osm_type}/${item.osm_id}`,
-                    title: item.display_name,
-                    content: `Type: ${item.type}, Class: ${item.class}`,
-                    engine: 'openstreetmap'
-                });
-            });
-        }
-
-        return results;
-    }
-};
+          return [path, response];
+        },
+      }
+    )
+  )?.data;
