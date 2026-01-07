@@ -1,88 +1,101 @@
-import { Engine, EngineResult } from '../../engine.js';
-import grab from 'grab-url';
-import { parseHTML } from 'linkedom';
-export const bing_news: Engine = {
-    name: 'bing_news',
-    categories: ['news'],
-    request: async (query: string, params: any = {}) => {
-        const pageno = params.pageno || 1;
-        const page = pageno - 1;
+import grab from "grab-url";
+import { EngineFunction } from "../../engine";
+import { parseHTML } from "linkedom";
 
-        const queryParams = new URLSearchParams({
-            q: query,
-            InfiniteScroll: '1',
-            first: String(page * 10 + 1),
-            SFX: String(page),
-            form: 'PTFTNR',
-            setlang: 'en',
-            cc: 'US',
-        });
+export const bing_news: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab(
+      `https://www.bing.com/news/infinitescrollajax?${new URLSearchParams({
+        q: query,
+        InfiniteScroll: "1",
+        first: String(((page || 1) - 1) * 10 + 1),
+        SFX: String((page || 1) - 1),
+        form: "PTFTNR",
+        setlang: "en",
+        cc: "US",
+      }).toString()}`,
+      {
+        responseType: "text",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5",
+        },
+        onResponse(path: string, response: any) {
+          const html = response.data || response;
+          const { document } = parseHTML(html);
+          const results: any[] = [];
 
-        const url = `https://www.bing.com/news/infinitescrollajax?${queryParams.toString()}`;
+          // Parse news items from Bing News
+          document
+            .querySelectorAll('div.newsitem, div[class*="newsitem"]')
+            .forEach((el) => {
+              const element = el;
 
-        return await grab(url, {
-            responseType: 'text',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-            }
-        });
+              const link = element.querySelector('a.title, a[class*="title"]');
+              if (!link) return;
 
-    },
-    response: async (response: any) => {
-        const html = response.data || response;
-        const { document } = parseHTML(html);
-        const results: EngineResult[] = [];
+              const url = link.getAttribute("href");
+              const title = link.textContent?.trim() || "";
+              const content =
+                element
+                  .querySelector('div.snippet, div[class*="snippet"]')
+                  ?.textContent?.trim() || "";
 
-        // Parse news items from Bing News
-        document.querySelectorAll('div.newsitem, div[class*="newsitem"]').forEach((el) => {
-            const element = el;
-
-            const link = element.querySelector('a.title, a[class*="title"]');
-            if (!link) return;
-
-            const url = link.getAttribute('href');
-            const title = link.textContent?.trim() || '';
-            const content = element.querySelector('div.snippet, div[class*="snippet"]')?.textContent?.trim() || '';
-
-            if (!url || !title) {
+              if (!url || !title) {
                 return; // continue to next iteration
-            }
+              }
 
-            // Extract metadata (source, time, author)
-            const metadata: string[] = [];
-            const source = element.querySelector('div.source, div[class*="source"]');
+              // Extract metadata (source, time, author)
+              const metadata: string[] = [];
+              const source = element.querySelector(
+                'div.source, div[class*="source"]'
+              );
 
-            if (source) {
-                const ariaLabel = source.querySelector('span[aria-label]')?.getAttribute('aria-label');
-                const author = link.getAttribute('data-author');
+              if (source) {
+                const ariaLabel = source
+                  .querySelector("span[aria-label]")
+                  ?.getAttribute("aria-label");
+                const author = link.getAttribute("data-author");
 
                 if (ariaLabel) {
-                    metadata.push(ariaLabel);
+                  metadata.push(ariaLabel);
                 }
                 if (author) {
-                    metadata.push(author);
+                  metadata.push(author);
                 }
-            }
+              }
 
-            // Extract thumbnail
-            let thumbnail = element.querySelector('a.imagelink img, a[class*="imagelink"] img')?.getAttribute('src') || undefined;
-            if (thumbnail && !thumbnail.startsWith('https://www.bing.com')) {
-                thumbnail = 'https://www.bing.com/' + thumbnail;
-            }
+              // Extract thumbnail
+              let thumbnail =
+                element
+                  .querySelector('a.imagelink img, a[class*="imagelink"] img')
+                  ?.getAttribute("src") || undefined;
+              if (thumbnail && !thumbnail.startsWith("https://www.bing.com")) {
+                thumbnail = "https://www.bing.com/" + thumbnail;
+              }
 
-            const metadataStr = metadata.length > 0 ? metadata.join(' | ') : '';
-            const fullContent = metadataStr ? `${metadataStr}\n${content}` : content;
+              const metadataStr = metadata.length > 0 ? metadata.join(" | ") : "";
+              const fullContent = metadataStr
+                ? `${metadataStr}\n${content}`
+                : content;
 
-            results.push({
+              results.push({
                 url,
                 title,
                 content: fullContent,
-                engine: 'bing_news'
+                engine: "bing_news",
+              });
             });
-        });
 
-        return results;
-    }
-};
+          response.data = results;
+          return [path, response];
+        },
+      }
+    )
+  )?.data;

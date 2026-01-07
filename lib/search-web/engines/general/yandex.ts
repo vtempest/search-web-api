@@ -1,62 +1,66 @@
-import { Engine, EngineResult, extractResponseData } from '../../engine.js';
-import { parseHTML } from 'linkedom';
-import grab from 'grab-url';
+import { parseHTML } from "linkedom";
+import grab from "grab-url";
+import { EngineFunction } from "../../engine";
 
-export const yandex: Engine = {
-    name: 'yandex',
-    categories: ['general'],
-    request: async (query: string, params: any = {}) => {
-        const pageno = params.pageno || 1;
+export const yandex: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) => {
+  const queryParams = new URLSearchParams({
+    tmpl_version: "releases",
+    text: query,
+    web: "1",
+    frame: "1",
+    searchid: "3131712",
+    lang: "en",
+  });
 
-        const queryParams = new URLSearchParams({
-            tmpl_version: 'releases',
-            text: query,
-            web: '1',
-            frame: '1',
-            searchid: '3131712',
-            lang: 'en',
-        });
+  if ((page || 1) > 1) {
+    queryParams.set("p", String((page || 1) - 1));
+  }
 
-        if (pageno > 1) {
-            queryParams.set('p', String(pageno - 1));
-        }
+  return (
+    await grab(`https://yandex.com/search/site/?${queryParams.toString()}`, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        Cookie: "yp=1716337604.sp.family%3A0#1685406411.szm.1:1920x1080:1920x999",
+      },
+      responseType: "text",
+      onResponse(path: string, response: any) {
+        const { document } = parseHTML(response);
 
-        const url = `https://yandex.com/search/site/?${queryParams.toString()}`;
+        response.data = Array.from(
+          document.querySelectorAll('li.serp-item, li[class*="serp-item"]')
+        )
+          .map((element) => {
+            const link = element.querySelector(
+              'a.b-serp-item__title-link, a[class*="title-link"]'
+            );
+            const url = link?.getAttribute("href") || "";
+            const title =
+              link?.querySelector("span, h3")?.textContent?.trim() || "";
+            const content =
+              element
+                .querySelector(
+                  'div.b-serp-item__text, div[class*="text"]'
+                )
+                ?.textContent?.trim() || "";
 
-        return await grab(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Cookie': 'yp=1716337604.sp.family%3A0#1685406411.szm.1:1920x1080:1920x999',
-            },
-            responseType: 'text'
-        });
-    },
-    response: async (response: any) => {
-        const html = extractResponseData(response);
-        const { document } = parseHTML(html);
-        const results: EngineResult[] = [];
+            return {
+              url,
+              title,
+              content,
+              engine: "yandex",
+            };
+          })
+          .filter((r) => r.url && r.title);
 
-        // Parse Yandex search results
-        document.querySelectorAll('li.serp-item, li[class*="serp-item"]').forEach((el) => {
-            const element = el;
-
-            const link = element.querySelector('a.b-serp-item__title-link, a[class*="title-link"]');
-            const url = link?.getAttribute('href');
-            const title = link?.querySelector('span, h3')?.textContent?.trim() || '';
-            const content = element.querySelector('div.b-serp-item__text, div[class*="text"]')?.textContent?.trim() || '';
-
-            if (url && title) {
-                results.push({
-                    url,
-                    title,
-                    content,
-                    engine: 'yandex'
-                });
-            }
-        });
-
-        return results;
-    }
+        return [path, response];
+      },
+    })
+  )?.data;
 };

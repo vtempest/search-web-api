@@ -1,52 +1,47 @@
-import { Engine, EngineResult, extractResponseData } from '../../engine';
-import { parseHTML } from 'linkedom';
-import grab from 'grab-url';
+import { parseHTML } from "linkedom";
+import grab from "grab-url";
+import { EngineFunction } from "../../engine";
 
-const extractText = (element: any) => {
-    return element.textContent?.trim() || ''.replace(/\s+/g, ' ');
-};
+export const yahoo: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab(
+      `https://search.yahoo.com/search?p=${encodeURIComponent(query)}&b=${
+        ((page || 1) - 1) * 7 + 1
+      }`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+        responseType: "text",
+        onResponse(path: string, response: any) {
+          const { document } = parseHTML(response);
 
-export const yahoo: Engine = {
-    name: 'yahoo',
-    categories: ['general'],
-    request: async (query: string, params: any = {}) => {
-        const pageno = params.pageno || 1;
-        const start = (pageno - 1) * 7; // Yahoo usually displays 7 results per page
-        const url = `https://search.yahoo.com/search?p=${encodeURIComponent(query)}&b=${start + 1}`;
+          response.data = Array.from(document.querySelectorAll(".algo-sr"))
+            .map((element) => {
+              const link = element.querySelector("a");
+              const url = link?.getAttribute("href") || "";
+              const title = link?.textContent?.trim() || "";
+              const content =
+                element.querySelector(".compText")?.textContent?.trim() || "";
 
-        return await grab(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9',
-            },
-            responseType: 'text'
-        });
-    },
-    response: async (response: any) => {
-        const html = extractResponseData(response);
-        const { document } = parseHTML(html);
-        const results: EngineResult[] = [];
+              return {
+                url,
+                title,
+                content,
+                engine: "yahoo",
+              };
+            })
+            .filter((r) => r.url && r.title);
 
-        document.querySelectorAll('.algo-sr').forEach((el) => {
-            const element = el;
-            const link = element.querySelector('a');
-            const url = link?.getAttribute('href');
-            const title = link?.textContent?.trim() || '';
-            const content = element.querySelector('.compText')?.textContent?.trim() || '';
-
-            if (url && title) {
-                // Yahoo URLs are often wrapped, try to extract real URL if possible
-                // For now, using the direct href
-                results.push({
-                    url,
-                    title,
-                    content,
-                    engine: 'yahoo'
-                });
-            }
-        });
-
-        return results;
-    }
-};
+          return [path, response];
+        },
+      }
+    )
+  )?.data;

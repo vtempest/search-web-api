@@ -1,112 +1,129 @@
-import { Engine, EngineResult, extractResponseData } from '../../engine.js';
+import grab from "grab-url";
+import { EngineFunction } from "../../engine";
 
+export const flickr: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab(
+      `https://www.flickr.com/search?text=${encodeURIComponent(query)}&page=${page || 1}`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5",
+        },
+        responseType: "text",
+        onResponse(path: string, response: any) {
+          const html = response?.data || response;
 
-export const flickr: Engine = {
-    name: 'flickr',
-    categories: ['images'],
-    request: async (query: string, params: any = {}) => {
-        const pageno = params.pageno || 1;
+          if (!html || typeof html !== "string") {
+            response.data = [];
+            return [path, response];
+          }
 
-        const queryParams = new URLSearchParams({
-            text: query
-        });
-
-        const url = `https://www.flickr.com/search?${queryParams.toString()}&page=${pageno}`;
-
-        return await grab(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-            },
-        responseType: 'text'
-        });
-
-    },
-    response: async (response: any) => {
-        const html = extractResponseData(response);
-        const results: EngineResult[] = [];
-
-        try {
-            // Extract modelExport JSON data from the page
+          try {
             const modelExportMatch = html.match(/^\s*modelExport:\s*({.*}),$m/m);
             if (!modelExportMatch) {
-                return results;
+              response.data = [];
+              return [path, response];
             }
 
             const modelExport = JSON.parse(modelExportMatch[1]);
 
             if (!modelExport.legend || !modelExport.legend[0]) {
-                return results;
+              response.data = [];
+              return [path, response];
             }
 
             const legend = modelExport.legend;
 
-            for (const index of legend) {
+            response.data = legend
+              .map((index: any) => {
                 if (index.length !== 8) {
-                    continue;
+                  return null;
                 }
 
                 try {
-                    const photo = modelExport.main[index[0]][parseInt(index[1])][index[2]][index[3]][index[4]][index[5]][parseInt(index[6])][index[7]];
+                  const photo =
+                    modelExport.main[index[0]][parseInt(index[1])][index[2]][
+                      index[3]
+                    ][index[4]][index[5]][parseInt(index[6])][index[7]];
 
-                    const title = photo.title || '';
-                    const description = photo.description || '';
-                    const author = photo.realname || photo.username || '';
+                  const title = photo.title || "";
+                  const description = photo.description || "";
+                  const author = photo.realname || photo.username || "";
 
-                    // Get the largest available image size
-                    const imageSizes = ['o', 'k', 'h', 'b', 'c', 'z', 'm', 'n', 't', 'q', 's'];
-                    let sizeData = null;
+                  const imageSizes = [
+                    "o",
+                    "k",
+                    "h",
+                    "b",
+                    "c",
+                    "z",
+                    "m",
+                    "n",
+                    "t",
+                    "q",
+                    "s",
+                  ];
+                  let sizeData = null;
 
-                    for (const size of imageSizes) {
-                        if (photo.sizes?.data?.[size]?.data) {
-                            sizeData = photo.sizes.data[size].data;
-                            break;
-                        }
+                  for (const size of imageSizes) {
+                    if (photo.sizes?.data?.[size]?.data) {
+                      sizeData = photo.sizes.data[size].data;
+                      break;
                     }
+                  }
 
-                    if (!sizeData) {
-                        continue;
-                    }
+                  if (!sizeData) {
+                    return null;
+                  }
 
-                    const imgSrc = sizeData.url;
-                    const resolution = `${sizeData.width} x ${sizeData.height}`;
+                  const imgSrc = sizeData.url;
+                  const resolution = `${sizeData.width} x ${sizeData.height}`;
 
-                    // Get thumbnail
-                    let thumbnail = imgSrc;
-                    if (photo.sizes?.data?.n?.data?.url) {
-                        thumbnail = photo.sizes.data.n.data.url;
-                    } else if (photo.sizes?.data?.z?.data?.url) {
-                        thumbnail = photo.sizes.data.z.data.url;
-                    }
+                  let thumbnail = imgSrc;
+                  if (photo.sizes?.data?.n?.data?.url) {
+                    thumbnail = photo.sizes.data.n.data.url;
+                  } else if (photo.sizes?.data?.z?.data?.url) {
+                    thumbnail = photo.sizes.data.z.data.url;
+                  }
 
-                    // Build URL
-                    const url = photo.ownerNsid
-                        ? `https://www.flickr.com/photos/${photo.ownerNsid}/${photo.id}`
-                        : imgSrc;
+                  const url = photo.ownerNsid
+                    ? `https://www.flickr.com/photos/${photo.ownerNsid}/${photo.id}`
+                    : imgSrc;
 
-                    const content = [
-                        description,
-                        author ? `Author: ${author}` : '',
-                        `Resolution: ${resolution}`
-                    ].filter(Boolean).join('\n');
+                  const content = [
+                    description,
+                    author ? `Author: ${author}` : "",
+                    `Resolution: ${resolution}`,
+                  ]
+                    .filter(Boolean)
+                    .join("\n");
 
-                    results.push({
-                        url,
-                        title,
-                        content,
-                        thumbnail,
-                        engine: 'flickr'
-                    });
+                  return {
+                    url,
+                    title,
+                    content,
+                    thumbnail,
+                    engine: "flickr",
+                  };
                 } catch (e) {
-                    // Skip invalid photo entries
-                    continue;
+                  return null;
                 }
-            }
-        } catch (e) {
-            console.error('Error parsing Flickr response:', e);
-        }
+              })
+              .filter((r: any) => r !== null);
+          } catch (e) {
+            console.error("Error parsing Flickr response:", e);
+            response.data = [];
+          }
 
-        return results;
-    }
-};
+          return [path, response];
+        },
+      }
+    )
+  )?.data;

@@ -1,74 +1,67 @@
-import { Engine, EngineResult, extractResponseData } from '../../engine.js';
-import { parseHTML } from 'linkedom';
-import grab from 'grab-url';
+import { parseHTML } from "linkedom";
+import grab from "grab-url";
+import { EngineFunction } from "../../engine";
 
-export const baidu: Engine = {
-    name: 'baidu',
-    categories: ['general'],
-    request: async (query: string, params: any = {}) => {
-        const pageno = params.pageno || 1;
-        const resultsPerPage = 10;
-        const pn = (pageno - 1) * resultsPerPage;
+export const baidu: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab(
+      `https://www.baidu.com/s?wd=${encodeURIComponent(query)}&rn=10&pn=${
+        ((page || 1) - 1) * 10
+      }`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+          Cookie: "BAIDUID=1234567890:FG=1",
+        },
+        responseType: "text",
+        onResponse(path: string, response: any) {
+          const { document } = parseHTML(response);
 
-        const queryParams = new URLSearchParams({
-            wd: query,
-            rn: String(resultsPerPage),
-            pn: String(pn),
-        });
+          response.data = Array.from(
+            document.querySelectorAll(
+              "#content_left > div.result, div.c-container"
+            )
+          )
+            .map((element) => {
+              const titleLink = element.querySelector("h3 a, h3.c-title a");
+              const url = titleLink?.getAttribute("href") || "";
+              const title = titleLink?.textContent?.trim() || "";
 
-        const url = `https://www.baidu.com/s?${queryParams.toString()}`;
+              if (!url || !title) {
+                return null;
+              }
 
-        return await grab(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-                'Cookie': 'BAIDUID=1234567890:FG=1',
-            },
-            responseType: 'text'
-        });
-    },
-    response: async (response: any) => {
-        const html = extractResponseData(response);
-        const { document } = parseHTML(html);
-        const results: EngineResult[] = [];
+              const content =
+                element
+                  .querySelector(
+                    "div.c-abstract, div.c-span9, span.content-right_2s-H4"
+                  )
+                  ?.textContent?.trim() || "";
+              const timestamp =
+                element
+                  .querySelector(
+                    "span.c-color-gray2, span.newTimeFactor_2s-H4"
+                  )
+                  ?.textContent?.trim() || "";
 
-        // Parse Baidu search results
-        document.querySelectorAll('#content_left > div.result, div.c-container').forEach((el) => {
-            const element = el;
-
-            // Get title and URL
-            const titleLink = element.querySelector('h3 a, h3.c-title a');
-            let url = titleLink?.getAttribute('href') || '';
-            const title = titleLink?.textContent?.trim() || '';
-
-            if (!url || !title) {
-                return; // continue to next iteration
-            }
-
-            // Baidu uses redirect URLs, extract real URL if present
-            // Format: https://www.baidu.com/link?url=...
-            if (url.includes('/link?url=') || url.includes('baidu.com/link')) {
-                // For now, keep the Baidu redirect URL
-                // In production, you might want to resolve these
-            }
-
-            // Get content/description
-            const content = element.querySelector('div.c-abstract, div.c-span9, span.content-right_2s-H4')?.textContent?.trim() || '';
-
-            // Get timestamp if available
-            const timestamp = element.querySelector('span.c-color-gray2, span.newTimeFactor_2s-H4')?.textContent?.trim() || '';
-
-            const fullContent = timestamp ? `${timestamp}\n${content}` : content;
-
-            results.push({
+              return {
                 url,
                 title,
-                content: fullContent,
-                engine: 'baidu'
-            });
-        });
+                content: timestamp ? `${timestamp}\n${content}` : content,
+                engine: "baidu",
+              };
+            })
+            .filter((r) => r !== null && r.url && r.title);
 
-        return results;
-    }
-};
+          return [path, response];
+        },
+      }
+    )
+  )?.data;

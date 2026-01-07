@@ -1,67 +1,60 @@
-import { Engine, EngineResult, extractResponseData } from '../../engine.js';
+import { parseHTML } from "linkedom";
+import grab from "grab-url";
+import { EngineFunction } from "../../engine";
 
-import { parseHTML } from 'linkedom';
-import grab from 'grab-url';
-export const imgur: Engine = {
-    name: 'imgur',
-    categories: ['images'],
-    request: async (query: string, params: any = {}) => {
-        const pageno = params.pageno || 1;
-        const timeRange = 'all'; // all, day, week, month, year
+export const imgur: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab(
+      `https://imgur.com/search/score/all?q=${encodeURIComponent(query)}&qs=thumbs&p=${(page || 1) - 1}`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5",
+        },
+        responseType: "text",
+        onResponse(path: string, response: any) {
+          const html = response?.data || response;
 
-        const queryParams = new URLSearchParams({
-            q: query,
-            qs: 'thumbs',
-            p: String(pageno - 1),
-        });
+          if (!html || typeof html !== "string") {
+            response.data = [];
+            return [path, response];
+          }
 
-        const url = `https://imgur.com/search/score/${timeRange}?${queryParams.toString()}`;
+          const { document } = parseHTML(html);
 
-        return await grab(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-            },
-            responseType: 'text'
-        });
+          response.data = Array.from(
+            document.querySelectorAll('div.cards div.post, div[class*="post"]')
+          )
+            .map((element) => {
+              const link = element.querySelector("a");
+              const url = link?.getAttribute("href");
+              const title = link?.querySelector("img")?.getAttribute("alt") || "";
+              let thumbnail = link?.querySelector("img")?.getAttribute("src") || "";
 
-    },
-    response: async (response: any) => {
-        const html = extractResponseData(response);
-        const { document } = parseHTML(html);
-        const results: EngineResult[] = [];
+              if (!url || !thumbnail || thumbnail.length < 25) {
+                return null;
+              }
 
-        // Parse Imgur search results
-        document.querySelectorAll('div.cards div.post, div[class*="post"]').forEach((el) => {
-            const element = el;
+              const imgSrc = thumbnail.replace("b.", ".");
 
-            const link = element.querySelector('a');
-            const url = link?.getAttribute('href');
-            const title = link?.querySelector('img')?.getAttribute('alt') || '';
-            let thumbnail = link?.querySelector('img')?.getAttribute('src') || '';
-
-            if (!url || !thumbnail) {
-                return; // continue to next iteration
-            }
-
-            // Bug fix: sometimes there's no preview image (len < 25)
-            if (thumbnail.length < 25) {
-                return;
-            }
-
-            // Convert thumbnail to full image (remove 'b.' prefix)
-            const imgSrc = thumbnail.replace('b.', '.');
-
-            results.push({
+              return {
                 url: `https://imgur.com${url}`,
                 title,
-                content: '',
+                content: "",
                 thumbnail,
-                engine: 'imgur'
-            });
-        });
+                engine: "imgur",
+              };
+            })
+            .filter((r) => r !== null);
 
-        return results;
-    }
-};
+          return [path, response];
+        },
+      }
+    )
+  )?.data;

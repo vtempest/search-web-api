@@ -1,43 +1,37 @@
-import { Engine, EngineResult } from '../../engine.js';
-import grab from 'grab-url';
+import grab from "grab-url";
+import { EngineFunction, EngineResult } from "../../engine";
 
-export const mastodon: Engine = {
-    name: 'mastodon',
-    categories: ['social'],
-    request: async (query: string, params: any = {}) => {
-        const baseUrl = 'https://mastodon.social';
-        const pageSize = 40;
+export const mastodon: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab(
+      `https://mastodon.social/api/v2/search?${new URLSearchParams({
+        q: query,
+        resolve: "false",
+        type: "accounts",
+        limit: "40",
+      }).toString()}`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+        onResponse(path: string, response: any) {
+          const data = response.data || response;
+          const results: EngineResult[] = [];
+          const accounts = data.accounts || [];
 
-        const queryParams = new URLSearchParams({
-            q: query,
-            resolve: 'false',
-            type: 'accounts', // can be: accounts, hashtags, statuses
-            limit: String(pageSize),
-        });
-
-        const url = `${baseUrl}/api/v2/search?${queryParams.toString()}`;
-
-        return await grab(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            }
-        });
-
-    },
-    response: async (data: any) => {
-        const results: EngineResult[] = [];
-
-        const accounts = data.accounts || [];
-
-        for (const account of accounts) {
+          for (const account of accounts) {
             const url = account.uri || account.url;
-            const username = account.username || '';
+            const username = account.username || "";
             const displayName = account.display_name || username;
             const followersCount = account.followers_count || 0;
-            const note = account.note || '';
+            const note = account.note || "";
 
             // Strip HTML tags from note
-            const cleanNote = note.replace(/<[^>]*>/g, '').trim();
+            const cleanNote = note.replace(/<[^>]*>/g, "").trim();
 
             const title = `${displayName} (@${username})`;
             const content = `Followers: ${followersCount}\n${cleanNote}`;
@@ -45,14 +39,17 @@ export const mastodon: Engine = {
             const thumbnail = account.avatar || account.avatar_static;
 
             results.push({
-                url,
-                title,
-                content,
-                thumbnail,
-                engine: 'mastodon'
+              url,
+              title,
+              content,
+              thumbnail,
+              engine: "mastodon",
             });
-        }
+          }
 
-        return results;
-    }
-};
+          response.data = results;
+          return [path, response];
+        },
+      }
+    )
+  )?.data;

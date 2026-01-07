@@ -1,35 +1,34 @@
-import { Engine, EngineResult } from '../lib/engine';
-import grab from 'grab-url';
+import grab from "grab-url";
+import { EngineFunction } from "../../engine";
 
-export const npm: Engine = {
-    name: 'npm',
-    categories: ['it', 'packages'],
-    request: async (query: string, params: any = {}) => {
-        const pageno = params.pageno || 1;
-        const from = (pageno - 1) * 10;
-        const url = `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=10&from=${from}`;
+export const npm: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab(
+      `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=10&from=${((page || 1) - 1) * 10}`,
+      {
+        headers: {
+          "User-Agent": "HonoxSearX/1.0",
+        },
+        onResponse(path: string, response: any) {
+          const results = [];
 
-        return await grab(url, {
-            headers: {
-                'User-Agent': 'HonoxSearX/1.0'
-            }
-        });
-
-    },
-    response: async (json: any) => {
-        const results: EngineResult[] = [];
-
-        if (json && json.objects) {
-            json.objects.forEach((item: any) => {
-                results.push({
-                    url: item.package.links.npm,
-                    title: item.package.name,
-                    content: item.package.description || '',
-                    engine: 'npm'
-                });
+          if (response.data && response.data.objects) {
+            response.data.objects.forEach((item: any) => {
+              results.push({
+                url: item.package.links.npm,
+                title: item.package.name,
+                content: item.package.description || "",
+                engine: "npm",
+              });
             });
-        }
+          }
 
-        return results;
-    }
-};
+          response.data = results;
+          return [path, response];
+        },
+      }
+    )
+  )?.data;

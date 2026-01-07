@@ -1,94 +1,88 @@
-import { Engine, EngineResult } from '../../engine.js';
-import grab from 'grab-url';
+import grab from "grab-url";
+import { EngineFunction } from "../../engine";
 
-export const semantic_scholar: Engine = {
-    name: 'semantic_scholar',
-    categories: ['science', 'academic'],
-    request: async (query: string, params: any = {}) => {
-        const pageno = params.pageno || 1;
+export const semantic_scholar: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab("https://www.semanticscholar.org/api/1/search", {
+      post: true,
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+      },
+      body: JSON.stringify({
+        queryString: query,
+        page: page || 1,
+        pageSize: 10,
+        sort: "relevance",
+        getQuerySuggestions: false,
+        authors: [],
+        coAuthors: [],
+        venues: [],
+        performTitleMatch: true,
+      }),
+      onResponse(path: string, response: any) {
+        if (!response.results) {
+          response.data = [];
+          return [path, response];
+        }
 
-        const url = 'https://www.semanticscholar.org/api/1/search';
+        response.data = response.results.map((result: any) => {
+          let url = result.primaryPaperLink?.url;
+          if (!url && result.links && result.links.length > 0) {
+            url = result.links[0];
+          }
+          if (
+            !url &&
+            result.alternatePaperLinks &&
+            result.alternatePaperLinks.length > 0
+          ) {
+            url = result.alternatePaperLinks[0].url;
+          }
+          if (!url) {
+            url = `https://www.semanticscholar.org/paper/${result.id}`;
+          }
 
-        const payload = {
-            queryString: query,
-            page: pageno,
-            pageSize: 10,
-            sort: 'relevance',
-            getQuerySuggestions: false,
-            authors: [],
-            coAuthors: [],
-            venues: [],
-            performTitleMatch: true,
-        };
+          const title = result.title?.text || "";
+          const abstract = result.abstract?.text || "";
 
-        return await grab(url, {
-            post: true,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            },
-            body: JSON.stringify(payload)
+          const metadata: string[] = [];
+          if (result.authors && result.authors.length > 0) {
+            const authorNames = result.authors
+              .map((a: any) => a.name)
+              .slice(0, 3);
+            metadata.push(
+              `Authors: ${authorNames.join(", ")}${
+                result.authors.length > 3 ? " et al." : ""
+              }`
+            );
+          }
+          if (result.year) {
+            metadata.push(`Year: ${result.year}`);
+          }
+          if (result.venue) {
+            metadata.push(`Venue: ${result.venue}`);
+          }
+          if (result.citationCount) {
+            metadata.push(`Citations: ${result.citationCount}`);
+          }
+
+          const content =
+            metadata.length > 0
+              ? `${metadata.join(" | ")}\n\n${abstract}`
+              : abstract;
+
+          return {
+            url,
+            title,
+            content,
+            engine: "semantic_scholar",
+          };
         });
 
-    },
-    response: async (data: any) => {
-        const results: EngineResult[] = [];
-
-        if (!data.results) {
-            return results;
-        }
-
-        for (const result of data.results) {
-            // Get URL
-            let url = result.primaryPaperLink?.url;
-            if (!url && result.links && result.links.length > 0) {
-                url = result.links[0];
-            }
-            if (!url && result.alternatePaperLinks && result.alternatePaperLinks.length > 0) {
-                url = result.alternatePaperLinks[0].url;
-            }
-            if (!url) {
-                url = `https://www.semanticscholar.org/paper/${result.id}`;
-            }
-
-            const title = result.title?.text || '';
-            const abstract = result.abstract?.text || '';
-
-            // Build metadata
-            const metadata: string[] = [];
-
-            // Authors
-            if (result.authors && result.authors.length > 0) {
-                const authorNames = result.authors.map((a: any) => a.name).slice(0, 3);
-                metadata.push(`Authors: ${authorNames.join(', ')}${result.authors.length > 3 ? ' et al.' : ''}`);
-            }
-
-            // Year
-            if (result.year) {
-                metadata.push(`Year: ${result.year}`);
-            }
-
-            // Venue
-            if (result.venue) {
-                metadata.push(`Venue: ${result.venue}`);
-            }
-
-            // Citations
-            if (result.citationCount) {
-                metadata.push(`Citations: ${result.citationCount}`);
-            }
-
-            const content = metadata.length > 0
-                ? `${metadata.join(' | ')}\n\n${abstract}`
-                : abstract;
-
-            results.push({
-                url,
-                title,
-                content,
-                engine: 'semantic_scholar'
-            });
-        }
-
-        return results;
-    }
-};
+        return [path, response];
+      },
+    })
+  )?.data;

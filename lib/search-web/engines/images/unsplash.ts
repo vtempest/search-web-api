@@ -1,40 +1,39 @@
-import { Engine, EngineResult } from '../lib/engine';
-import grab from 'grab-url';
+import grab from "grab-url";
+import { EngineFunction } from "../../engine";
 
-export const unsplash: Engine = {
-    name: 'unsplash',
-    categories: ['images'],
-    request: async (query: string, params: any = {}) => {
-        const pageno = params.pageno || 1;
-        // Unsplash requires an API key for their official API, but we can try scraping or using a public frontend/proxy if available.
-        // Or we can use the napi (internal API) if possible, but that's fragile.
-        // Let's try scraping the search page HTML which contains JSON data often.
-        // Actually, Unsplash has a frontend API that might be accessible.
-        // Let's try a simple search URL and see if we can parse HTML.
-        const url = `https://unsplash.com/napi/search/photos?query=${encodeURIComponent(query)}&per_page=20&page=${pageno}`;
+export const unsplash: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab(
+      `https://unsplash.com/napi/search/photos?query=${encodeURIComponent(query)}&per_page=20&page=${page || 1}`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        },
+        onResponse(path: string, response: any) {
+          const json = response?.data || response;
 
-        return await grab(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-            }
-        });
+          if (!json || !json.results) {
+            response.data = [];
+            return [path, response];
+          }
 
-    },
-    response: async (json: any) => {
-        const results: EngineResult[] = [];
+          response.data = json.results.map((item: any) => ({
+            url: item.links.html,
+            title:
+              item.description ||
+              item.alt_description ||
+              "Unsplash Image",
+            content: `By ${item.user.name}`,
+            thumbnail: item.urls.small,
+            engine: "unsplash",
+          }));
 
-        if (json && json.results) {
-            json.results.forEach((item: any) => {
-                results.push({
-                    url: item.links.html,
-                    title: item.description || item.alt_description || 'Unsplash Image',
-                    content: `By ${item.user.name}`,
-                    thumbnail: item.urls.small,
-                    engine: 'unsplash'
-                });
-            });
-        }
-
-        return results;
-    }
-};
+          return [path, response];
+        },
+      }
+    )
+  )?.data;

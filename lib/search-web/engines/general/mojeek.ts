@@ -1,50 +1,52 @@
-import { Engine, EngineResult } from '../../engine.js';
-import grab from 'grab-url';
-import { parseHTML } from 'linkedom';
+import { parseHTML } from "linkedom";
+import grab from "grab-url";
+import { EngineFunction } from "../../engine";
 
-export const mojeek: Engine = {
-    name: 'mojeek',
-    categories: ['general', 'web'],
-    request: async (query: string, params: any = {}) => {
-        const pageno = params.pageno || 1;
-        const offset = 10 * (pageno - 1);
+export const mojeek: EngineFunction = async (
+  query: string,
+  page: number | undefined
+) =>
+  (
+    await grab(
+      `https://www.mojeek.com/search?q=${encodeURIComponent(query)}&s=${
+        10 * ((page || 1) - 1)
+      }&safe=0`,
+      {
+        responseType: "text",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        },
+        onResponse(path: string, response: any) {
+          if (!response || typeof response !== "string") {
+            response.data = [];
+            return [path, response];
+          }
 
-        const url = `https://www.mojeek.com/search?q=${encodeURIComponent(query)}&s=${offset}&safe=0`;
+          const { document } = parseHTML(response);
 
-        return await grab(url, {
-            responseType: 'text',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-            }
-        });
-    },
-    response: async (data: any) => {
-        const results: EngineResult[] = [];
+          response.data = Array.from(
+            document.querySelectorAll("ul.results-standard li a.ob")
+          )
+            .map((element) => {
+              const url = element.getAttribute("href") || "";
+              const parent = element.parentElement;
+              const title =
+                parent?.querySelector("h2 a")?.textContent?.trim() || "";
+              const content =
+                parent?.querySelector("p.s")?.textContent?.trim() || "";
 
-        if (!data || typeof data !== 'string') {
-            return results;
-        }
+              return {
+                url,
+                title,
+                content,
+                engine: "mojeek",
+              };
+            })
+            .filter((r) => r.url && r.title);
 
-        const { document } = parseHTML(data);
-
-        document.querySelectorAll('ul.results-standard li a.ob').forEach((element) => {
-            const elElem = element;
-            const url = elElem.getAttribute('href');
-            const $parent = elElem.parentElement;
-
-            const title = $parent?.querySelector('h2 a')?.textContent?.trim() || '';
-            const content = $parent?.querySelector('p.s')?.textContent?.trim() || '';
-
-            if (url && title) {
-                results.push({
-                    url,
-                    title,
-                    content,
-                    engine: 'mojeek'
-                });
-            }
-        });
-
-        return results;
-    }
-};
+          return [path, response];
+        },
+      }
+    )
+  )?.data;
