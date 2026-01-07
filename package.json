@@ -10,6 +10,7 @@
         "test:coverage": "vitest run --coverage"
     },
     "dependencies": {
+        "@huggingface/transformers": "^3.8.1",
         "@scalar/hono-api-reference": "^0.9.26",
         "grab-url": "^1.0.8",
         "hono": "^4.6.12",

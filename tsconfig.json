@@ -11,5 +11,5 @@
     },
     "include": [
         "app/**/*"
-, "lib"    ]
+, "lib", "test/test-utils.ts"    ]
 }
