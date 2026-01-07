@@ -1,6 +1,6 @@
-# Search Web API
+# Synergy Search Web API
 
-- **Multi-engine aggregation**: 100+ search engines across 10 categories
+- **Multi-engine aggregation**: 70+ major sites search sources across 10 categories
 - **Smart result merging**: Intelligent deduplication and ranking
 - **Weighted scoring**: Position-based algorithm with engine and category weights
 - **Category-based search**: Filter by academic, news, images, videos, etc.
@@ -237,6 +237,9 @@ score = Σ (engine_weight × category_weight × occurrences / position)
 - `occurrences`: Number of engines that found this result
 - `position`: Result position in original engine results
 
+Customize engine importance in `app/lib/search.ts`:
+Configure in `app/lib/category-registry.ts`:
+
 **Features:**
 
 - Deduplication by URL normalization
@@ -273,106 +276,3 @@ app/
 │   └── engine-descriptions.ts
 └── index.ts          # Main entry point
 ```
-
-## Configuration
-
-### Engine Weights
-
-Customize engine importance in `app/lib/search.ts`:
-
-```typescript
-const engineWeights = {
-  google: 1.5, // Higher weight for Google
-  bing: 1.3,
-  duckduckgo: 1.2,
-  google_scholar: 1.4,
-  arxiv: 1.3,
-  // Others default to 1.0
-};
-```
-
-### Category Weights
-
-Configure in `app/lib/category-registry.ts`:
-
-```typescript
-export const CATEGORIES = {
-  general: { defaultWeight: 1.0 },
-  academic: { defaultWeight: 1.3 }, // Boost academic results
-  it: { defaultWeight: 1.2 },
-  news: { defaultWeight: 1.1 },
-  // ...
-};
-```
-
-## Development
-
-### Running Tests
-
-```bash
-bun test
-```
-
-### Adding a New Engine
-
-1. Create engine file in appropriate category folder
-2. Implement the `Engine` interface
-3. Add import in `app/lib/search.ts`
-4. Add to engines array
-
-Example:
-
-```typescript
-import { Engine, EngineResult } from "../../lib/engine";
-import grab from "grab-url";
-
-export const myengine: Engine = {
-  name: "myengine",
-  categories: ["general"],
-  request: async (query: string, params: any) => {
-    const url = `https://example.com/search?q=${encodeURIComponent(query)}`;
-    return await grab(url, { responseType: "text" });
-  },
-  response: async (response: any) => {
-    // Parse and return results
-    return results;
-  },
-};
-```
-
-## Statistics
-
-- **Total Engines**: 100+
-- **Categories**: 11
-- **Autocomplete Backends**: 8
-- **Supported Languages**: Multiple (varies by engine)
-- **API Endpoints**: 5
-
-## Credits
-
-This project is based on [SearXNG](https://github.com/searxng/searxng), the privacy-respecting metasearch engine.
-
-- Engine descriptions from SearXNG's `engine_descriptions.json`
-- Ranking algorithm from SearXNG's `results.py`
-- Scraper implementations ported from SearXNG's engine modules
-
-## License
-
-AGPL-3.0-or-later (inherited from SearXNG)
-
-## Contributing
-
-Contributions are welcome! Areas for improvement:
-
-- [ ] Port remaining 100+ engines from SearXNG
-- [ ] Add more autocomplete backends
-- [ ] Implement caching layer
-- [ ] Add rate limiting
-- [ ] Create Docker image
-- [ ] Add integration tests
-
-## Links
-
-- [SearXNG Original](https://github.com/searxng/searxng)
-- [API Documentation](http://localhost:3000/docs)
-- [Engine Directory](./ENGINES.md)

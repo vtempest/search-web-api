@@ -82,6 +82,11 @@ export const ebay: Engine = {
           url: url || "",
           title,
           content: content || "",
+          // @ts-ignore
+          price,
+          // @ts-ignore
+          shipping,
+          // @ts-ignore
           thumbnail,
           engine: "ebay",
         };
