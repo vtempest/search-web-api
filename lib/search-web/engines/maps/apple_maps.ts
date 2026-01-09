@@ -52,11 +52,10 @@ export const apple_maps: EngineFunction = async (
   }
 
   return (
-    await grab(
-      `https://api.apple-mapkit.com/v1/search?q=${encodeURIComponent(
-        query
-      )}&lang=en&mkjsVersion=5.72.53`,
-      {
+    await grab("https://api.apple-mapkit.com/v1/search", {
+      q: query,
+      lang: "en",
+      mkjsVersion: "5.72.53",
         headers: {
           Authorization: `Bearer ${token}`,
           "User-Agent":

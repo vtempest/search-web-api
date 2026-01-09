@@ -6,9 +6,10 @@ export const unsplash: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://unsplash.com/napi/search/photos?query=${encodeURIComponent(query)}&per_page=20&page=${page || 1}`,
-      {
+    await grab("https://unsplash.com/napi/search/photos", {
+      query: query,
+      per_page: 20,
+      page: page || 1,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",

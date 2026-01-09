@@ -16,11 +16,9 @@ export const ebay: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(
-        query
-      )}&_sacat=${page || 1}`,
-      {
+    await grab("https://www.ebay.com/sch/i.html", {
+      _nkw: query,
+      _sacat: page || 1,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",

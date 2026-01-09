@@ -7,9 +7,9 @@ export const imdb: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://www.imdb.com/find/?q=${encodeURIComponent(query)}&s=all`,
-      {
+    await grab("https://www.imdb.com/find/", {
+      q: query,
+      s: "all",
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",

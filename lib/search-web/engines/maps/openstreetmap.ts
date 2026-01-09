@@ -6,11 +6,11 @@ export const openstreetmap: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-        query
-      )}&format=json&addressdetails=1&limit=10`,
-      {
+    await grab("https://nominatim.openstreetmap.org/search", {
+      q: query,
+      format: "json",
+      addressdetails: 1,
+      limit: 10,
         headers: {
           "User-Agent": "HonoxSearX/1.0",
         },

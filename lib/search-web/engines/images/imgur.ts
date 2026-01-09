@@ -7,9 +7,10 @@ export const imgur: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://imgur.com/search/score/all?q=${encodeURIComponent(query)}&qs=thumbs&p=${(page || 1) - 1}`,
-      {
+    await grab("https://imgur.com/search/score/all", {
+      q: query,
+      qs: "thumbs",
+      p: (page || 1) - 1,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",

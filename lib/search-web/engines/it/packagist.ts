@@ -6,9 +6,10 @@ export const packagist: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://packagist.org/search.json?q=${encodeURIComponent(query)}&page=${page || 1}&per_page=15`,
-      {
+    await grab("https://packagist.org/search.json", {
+      q: query,
+      page: page || 1,
+      per_page: 15,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",

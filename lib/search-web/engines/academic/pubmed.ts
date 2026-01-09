@@ -11,11 +11,11 @@ export const pubmed: EngineFunction = async (
   const retstart = (pageno - 1) * number_of_results;
 
   // Step 1: Search for PMIDs
-  const esearchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(
-    query
-  )}&retstart=${retstart}&retmax=${number_of_results}`;
-
-  const esearchResponse = await grab(esearchUrl, {
+  const esearchResponse = await grab("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi", {
+    db: "pubmed",
+    term: query,
+    retstart: retstart,
+    retmax: number_of_results,
     responseType: "text",
     headers: {
       "User-Agent":

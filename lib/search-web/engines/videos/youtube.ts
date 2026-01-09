@@ -16,9 +16,10 @@ async function tryInvidiousInstances(
 ): Promise<any> {
   for (const instance of INVIDIOUS_INSTANCES) {
     try {
-      const url = `${instance}/api/v1/search?q=${encodeURIComponent(query)}&page=${page || 1}&type=video`;
-
-      const result = await grab(url, {
+      const result = await grab(`${instance}/api/v1/search`, {
+        q: query,
+        page: page || 1,
+        type: "video",
         headers: {
           "User-Agent": "HonoxSearX/1.0",
         },

@@ -7,9 +7,9 @@ export const solidtorrents: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://solidtorrents.to/search?q=${encodeURIComponent(query)}&page=${page || 1}`,
-      {
+    await grab("https://solidtorrents.to/search", {
+      q: query,
+      page: page || 1,
         responseType: "text",
         headers: {
           "User-Agent":

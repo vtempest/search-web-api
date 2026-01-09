@@ -8,7 +8,7 @@ export const google: EngineFunction = async (
 ) =>
   (
     await grab("https://www.google.com/search", {
-      q: encodeURIComponent(query),
+      q: query,
       start: ((page || 1) - 1) * 10,
       gbv: 1,
       headers: {

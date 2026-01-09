@@ -6,9 +6,10 @@ export const dockerhub: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://hub.docker.com/api/search/v3/catalog/search?q=${encodeURIComponent(query)}&page=${page || 1}&page_size=25`,
-      {
+    await grab("https://hub.docker.com/api/search/v3/catalog/search", {
+      q: query,
+      page: page || 1,
+      page_size: 25,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",

@@ -7,9 +7,7 @@ export const eztv: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://eztv.re/search/${encodeURIComponent(query)}`,
-      {
+    await grab(`https://eztv.re/search/${query}`, {
         responseType: "text",
         headers: {
           "User-Agent":

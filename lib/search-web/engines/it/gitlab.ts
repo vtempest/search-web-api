@@ -6,9 +6,9 @@ export const gitlab: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://gitlab.com/api/v4/projects?search=${encodeURIComponent(query)}&page=${page || 1}`,
-      {
+    await grab("https://gitlab.com/api/v4/projects", {
+      search: query,
+      page: page || 1,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",

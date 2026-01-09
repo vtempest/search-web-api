@@ -6,9 +6,10 @@ export const npm: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=10&from=${((page || 1) - 1) * 10}`,
-      {
+    await grab("https://registry.npmjs.org/-/v1/search", {
+      text: query,
+      size: 10,
+      from: ((page || 1) - 1) * 10,
         headers: {
           "User-Agent": "HonoxSearX/1.0",
         },

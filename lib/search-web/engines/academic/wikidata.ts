@@ -6,11 +6,12 @@ export const wikidata: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(
-        query
-      )}&language=en&format=json&limit=20`,
-      {
+    await grab("https://www.wikidata.org/w/api.php", {
+      action: "wbsearchentities",
+      search: query,
+      language: "en",
+      format: "json",
+      limit: 20,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",

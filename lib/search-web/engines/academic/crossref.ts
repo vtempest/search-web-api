@@ -6,11 +6,9 @@ export const crossref: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://api.crossref.org/works?query=${encodeURIComponent(query)}&offset=${
-        20 * ((page || 1) - 1)
-      }`,
-      {
+    await grab("https://api.crossref.org/works", {
+      query: query,
+      offset: 20 * ((page || 1) - 1),
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",

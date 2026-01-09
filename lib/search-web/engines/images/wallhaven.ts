@@ -6,9 +6,10 @@ export const wallhaven: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://wallhaven.cc/api/v1/search?q=${encodeURIComponent(query)}&page=${page || 1}&purity=100`,
-      {
+    await grab("https://wallhaven.cc/api/v1/search", {
+      q: query,
+      page: page || 1,
+      purity: 100,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",

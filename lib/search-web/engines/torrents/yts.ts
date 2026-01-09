@@ -6,9 +6,10 @@ export const yts: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://yts.mx/api/v2/list_movies.json?query_term=${encodeURIComponent(query)}&page=${page || 1}&limit=20`,
-      {
+    await grab("https://yts.mx/api/v2/list_movies.json", {
+      query_term: query,
+      page: page || 1,
+      limit: 20,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",

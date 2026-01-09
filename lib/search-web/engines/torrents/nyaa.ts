@@ -7,9 +7,11 @@ export const nyaa: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://nyaa.si/?f=0&c=0_0&q=${encodeURIComponent(query)}&p=${page || 1}`,
-      {
+    await grab("https://nyaa.si/", {
+      f: 0,
+      c: "0_0",
+      q: query,
+      p: page || 1,
         responseType: "text",
         headers: {
           "User-Agent":

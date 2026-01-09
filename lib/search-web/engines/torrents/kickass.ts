@@ -7,9 +7,7 @@ export const kickass: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://kickasstorrents.to/usearch/${encodeURIComponent(query)}/${page || 1}/`,
-      {
+    await grab(`https://kickasstorrents.to/usearch/${query}/${page || 1}/`, {
         responseType: "text",
         headers: {
           "User-Agent":

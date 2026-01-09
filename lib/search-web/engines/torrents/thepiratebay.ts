@@ -7,9 +7,9 @@ export const thepiratebay: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://thepiratebay.org/search.php?q=${encodeURIComponent(query)}&page=${(page || 1) - 1}`,
-      {
+    await grab("https://thepiratebay.org/search.php", {
+      q: query,
+      page: (page || 1) - 1,
         responseType: "text",
         headers: {
           "User-Agent":
