@@ -9,8 +9,6 @@ import { pipeline, type TextGenerationSingle } from "@huggingface/transformers";
  * well-suited for sequence generation and can be used as a next word prediction
  * model with code similar to GPT2, but offers faster and lighter inference compared
  * to standard GPT-2.
- * Size & Architecture: DistilGPT2 has 6 layers, 12 attention heads, and 82 million
- *  parameters, with a model file size around 80MB.
  * Distillation: Created using knowledge distillation, it compresses the smallest
  * GPT-2 (124M parameter) model, preserving most capabilities but running
  * significantly faster and requiring less memory.

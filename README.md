@@ -6,7 +6,7 @@
 - **Category-based search**: Filter by academic, news, images, videos, etc.
 - **Autocomplete**: Query suggestions from 8 search engines
 
-## Search Engines
+## Search Site Sources
 
 ### General Search
 
