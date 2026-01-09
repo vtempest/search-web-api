@@ -8,8 +8,6 @@ import { pipeline, type TextGenerationSingle } from "@huggingface/transformers";
  * for efficient next word (next-token) prediction tasks in English text. It is
  * well-suited for sequence generation and can be used as a next word prediction
  * model with code similar to GPT2, but offers faster and lighter inference compared
- * to standard GPT-2.
- * Distillation: Created using knowledge distillation, it compresses the smallest
  * GPT-2 (124M parameter) model, preserving most capabilities but running
  * significantly faster and requiring less memory.
  * @see https://huggingface.co/Xenova/distilgpt2
