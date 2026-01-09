@@ -31,7 +31,7 @@ export interface EngineFunction {
     /**
      * The page number (optional)
      */
-    page?: number | undefined
+    page?: number
   ): Promise<EngineResult[]>;
 }
 

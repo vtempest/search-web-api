@@ -4,7 +4,7 @@ import { EngineFunction } from "../../engine";
 
 export const duckduckgo: EngineFunction = async (
   query: string,
-  page: number | undefined
+  page?: number
 ) =>
   (
     await grab("https://html.duckduckgo.com/html", {
