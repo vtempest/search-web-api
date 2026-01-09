@@ -6,21 +6,15 @@ export const yandex: EngineFunction = async (
   query: string,
   page: number | undefined
 ) => {
-  const queryParams = new URLSearchParams({
-    tmpl_version: "releases",
-    text: query,
-    web: "1",
-    frame: "1",
-    searchid: "3131712",
-    lang: "en",
-  });
-
-  if ((page || 1) > 1) {
-    queryParams.set("p", String((page || 1) - 1));
-  }
-
   return (
-    await grab(`https://yandex.com/search/site/?${queryParams.toString()}`, {
+    await grab(`https://yandex.com/search/site/`, {
+      tmpl_version: "releases",
+      text: query,
+      web: "1",
+      frame: "1",
+      searchid: "3131712",
+      lang: "en",
+      ...((page || 1) > 1 ? { p: (page || 1) - 1 } : {}),
       headers: {
         "User-Agent":
           "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
