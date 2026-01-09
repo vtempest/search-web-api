@@ -6,9 +6,13 @@ export const stackoverflow: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://api.stackexchange.com/2.3/search?order=desc&sort=relevance&q=${encodeURIComponent(query)}&site=stackoverflow&page=${page || 1}&pagesize=10`,
-      {
+    await grab("https://api.stackexchange.com/2.3/search", {
+      order: "desc",
+      sort: "relevance",
+      q: query,
+      site: "stackoverflow",
+      page: page || 1,
+      pagesize: 10,
         headers: {
           "User-Agent": "HonoxSearX/1.0",
         },

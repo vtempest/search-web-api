@@ -7,9 +7,9 @@ export const goodreads: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://www.goodreads.com/search?q=${encodeURIComponent(query)}&page=${page || 1}`,
-      {
+    await grab("https://www.goodreads.com/search", {
+      q: query,
+      page: page || 1,
         responseType: "text",
         headers: {
           "User-Agent":

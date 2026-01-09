@@ -6,11 +6,12 @@ export const wikipedia: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
-        query
-      )}&format=json&sroffset=${((page || 1) - 1) * 10}`,
-      {
+    await grab("https://en.wikipedia.org/w/api.php", {
+      action: "query",
+      list: "search",
+      srsearch: query,
+      format: "json",
+      sroffset: ((page || 1) - 1) * 10,
         headers: {
           "User-Agent": "HonoxSearX/1.0 (mailto:admin@example.com)",
         },

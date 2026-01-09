@@ -6,11 +6,13 @@ export const archive: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://archive.org/advancedsearch.php?q=${encodeURIComponent(
-        query
-      )}&fl[]=identifier,title,description,mediatype,downloads&sort[]=&sort[]=&sort[]=&rows=50&page=${page || 1}&output=json`,
-      {
+    await grab("https://archive.org/advancedsearch.php", {
+      q: query,
+      "fl[]": "identifier,title,description,mediatype,downloads",
+      "sort[]": "",
+      rows: 50,
+      page: page || 1,
+      output: "json",
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",

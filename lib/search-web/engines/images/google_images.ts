@@ -6,9 +6,13 @@ export const google_images: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=isch&asearch=isch&hl=en&gl=US&async=_fmt:json,p:1,ijn:${(page || 1) - 1}`,
-      {
+    await grab("https://www.google.com/search", {
+      q: query,
+      tbm: "isch",
+      asearch: "isch",
+      hl: "en",
+      gl: "US",
+      async: `_fmt:json,p:1,ijn:${(page || 1) - 1}`,
         headers: {
           "User-Agent":
             "NSTN/3.60.474802233.release Dalvik/2.1.0 (Linux; U; Android 12; US) gzip",

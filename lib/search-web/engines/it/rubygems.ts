@@ -6,9 +6,9 @@ export const rubygems: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://rubygems.org/api/v1/search.json?query=${encodeURIComponent(query)}&page=${page || 1}`,
-      {
+    await grab("https://rubygems.org/api/v1/search.json", {
+      query: query,
+      page: page || 1,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",

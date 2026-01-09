@@ -7,9 +7,9 @@ export const openclipart: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://openclipart.org/search/?query=${encodeURIComponent(query)}&p=${page || 1}`,
-      {
+    await grab("https://openclipart.org/search/", {
+      query: query,
+      p: page || 1,
         responseType: "text",
         headers: {
           "User-Agent":

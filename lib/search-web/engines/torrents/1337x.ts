@@ -7,9 +7,7 @@ export const torrent_1337x: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://1337x.to/search/${encodeURIComponent(query)}/${page || 1}/`,
-      {
+    await grab(`https://1337x.to/search/${query}/${page || 1}/`, {
         responseType: "text",
         headers: {
           "User-Agent":

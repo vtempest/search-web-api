@@ -7,11 +7,10 @@ export const mojeek: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://www.mojeek.com/search?q=${encodeURIComponent(query)}&s=${
-        10 * ((page || 1) - 1)
-      }&safe=0`,
-      {
+    await grab("https://www.mojeek.com/search", {
+      q: query,
+      s: 10 * ((page || 1) - 1),
+      safe: 0,
         responseType: "text",
         headers: {
           "User-Agent":

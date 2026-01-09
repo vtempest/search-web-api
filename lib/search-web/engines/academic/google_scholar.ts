@@ -7,11 +7,10 @@ export const google_scholar: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://scholar.google.com/scholar?q=${encodeURIComponent(query)}&start=${
-        ((page || 1) - 1) * 10
-      }&hl=en`,
-      {
+    await grab("https://scholar.google.com/scholar", {
+      q: query,
+      start: ((page || 1) - 1) * 10,
+      hl: "en",
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",

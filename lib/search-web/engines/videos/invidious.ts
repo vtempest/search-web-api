@@ -13,10 +13,11 @@ export const invidious: EngineFunction = async (
   page: number | undefined
 ) => {
   const baseUrl = DEFAULT_INSTANCES[0];
-  const url = `${baseUrl}/api/v1/search?q=${encodeURIComponent(query)}&page=${page || 1}`;
 
   return (
-    await grab(url, {
+    await grab(`${baseUrl}/api/v1/search`, {
+      q: query,
+      page: page || 1,
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",

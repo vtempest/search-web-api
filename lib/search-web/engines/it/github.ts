@@ -6,9 +6,10 @@ export const github: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&page=${page || 1}&per_page=10`,
-      {
+    await grab("https://api.github.com/search/repositories", {
+      q: query,
+      page: page || 1,
+      per_page: 10,
         headers: {
           "User-Agent": "HonoxSearX/1.0",
           Accept: "application/vnd.github.v3+json",

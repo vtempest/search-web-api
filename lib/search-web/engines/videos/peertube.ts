@@ -7,10 +7,16 @@ export const peertube: EngineFunction = async (
 ) => {
   const baseUrl = "https://peer.tube";
   const start = ((page || 1) - 1) * 10;
-  const url = `${baseUrl}/api/v1/search/videos?search=${encodeURIComponent(query)}&searchTarget=search-index&resultType=videos&start=${start}&count=10&sort=-match&nsfw=false`;
 
   return (
-    await grab(url, {
+    await grab(`${baseUrl}/api/v1/search/videos`, {
+      search: query,
+      searchTarget: "search-index",
+      resultType: "videos",
+      start: start,
+      count: 10,
+      sort: "-match",
+      nsfw: false,
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",

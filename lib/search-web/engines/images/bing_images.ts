@@ -7,9 +7,11 @@ export const bing_images: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://www.bing.com/images/async?q=${encodeURIComponent(query)}&async=1&first=${((page || 1) - 1) * 35 + 1}&count=35`,
-      {
+    await grab("https://www.bing.com/images/async", {
+      q: query,
+      async: 1,
+      first: ((page || 1) - 1) * 35 + 1,
+      count: 35,
         responseType: "text",
         headers: {
           "User-Agent":

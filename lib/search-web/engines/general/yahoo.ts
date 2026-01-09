@@ -7,11 +7,9 @@ export const yahoo: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://search.yahoo.com/search?p=${encodeURIComponent(query)}&b=${
-        ((page || 1) - 1) * 7 + 1
-      }`,
-      {
+    await grab("https://search.yahoo.com/search", {
+      p: query,
+      b: ((page || 1) - 1) * 7 + 1,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",

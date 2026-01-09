@@ -7,9 +7,11 @@ export const google_news: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(
-      `https://news.google.com/search?q=${encodeURIComponent(query)}&hl=en&gl=US&ceid=US:en`,
-      {
+    await grab("https://news.google.com/search", {
+      q: query,
+      hl: "en",
+      gl: "US",
+      ceid: "US:en",
         responseType: "text",
         headers: {
           "User-Agent":
