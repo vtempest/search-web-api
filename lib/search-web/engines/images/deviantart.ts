@@ -7,7 +7,8 @@ export const deviantart: EngineFunction = async (
   page: number | undefined
 ) =>
   (
-    await grab(`https://www.deviantart.com/search?q=${encodeURIComponent(query)}`, {
+    await grab(`https://www.deviantart.com/search`, {
+      q: query,
       responseType: "text",
       headers: {
         "User-Agent":
